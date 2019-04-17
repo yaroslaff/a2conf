@@ -102,9 +102,10 @@ class Node(object):
             if re.match(regex, c.raw, re.IGNORECASE):
                 return c
 
-    def get_nodes_cmd(self, cmd):
+    def get_nodes_cmd(self, cmdlist):
+        lowlist = list(map(str.lower, cmdlist))
         for c in self.content:
-            if c.cmd and c.cmd.lower() == cmd.lower():
+            if c.cmd and c.cmd.lower() in lowlist:
                 yield(c)
 
     def add_prefix(self,prefix, regex):

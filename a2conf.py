@@ -7,7 +7,7 @@ parser = argparse.ArgumentParser(description='Apache config parser')
 parser.add_argument('-i', '--infile', help='input filename')
 parser.add_argument('--cmd', default=list(), nargs='*', help='show all these commands', type=str.lower)
 parser.add_argument('--filter', nargs=2, metavar=('Command','Argument'),
-                    help='Process only sections with this command/argument', type=str.lower)
+                    help='Process only sections with this command/argument (command can be "ServerName,ServerList")', type=str.lower)
 parser.add_argument('--args', default=False, action='store_true', help='show only arguments')
 parser.add_argument('--uargs', default=False, action='store_true', help='show only unique arguments')
 
@@ -31,9 +31,9 @@ if args.cmd:
             # skip or process?
             if args.filter:
                 process = False
-                for checknode in vhost.get_nodes_cmd(args.filter[0]):
-                    arglist = checknode.args.split(' ')
-                    if args.filter[1].lower() in map(str.lower, arglist):
+                for checknode in vhost.get_nodes_cmd(args.filter[0].split(',')):
+                    checkargs = checknode.args.split(' ')
+                    if args.filter[1].lower() in map(str.lower, checkargs):
                         process = True
 
                 # filter failed
