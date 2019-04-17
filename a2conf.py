@@ -5,7 +5,7 @@ import apache2conf
 
 parser = argparse.ArgumentParser(description='Apache config parser')
 parser.add_argument('-i', '--infile', help='input filename')
-parser.add_argument('--cmd', default=list(), nargs='*', help='show all this commands', type=str.lower)
+parser.add_argument('--cmd', default=list(), nargs='*', help='show all these commands', type=str.lower)
 parser.add_argument('--filter', nargs=2, metavar=('Command','Argument'),
                     help='Process only sections with this command/argument', type=str.lower)
 parser.add_argument('--args', default=False, action='store_true', help='show only arguments')
