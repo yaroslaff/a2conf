@@ -15,6 +15,7 @@ class Node(object):
         self.args = None # Args to section (VirtualHost), e.g. "*:80" or
         self.cmd = None # Command, e.g. "ServerName"
 
+
         if name:
             self.name = name
         else:
@@ -31,13 +32,16 @@ class Node(object):
         elif self.is_close():
             pass
         elif self.raw:
-            m = re.match('[ \t]*([^ \t]+)[ \t]+([^#]*)', self.raw)
-            if m is None:
-                assert(False)
-            else:
-                # parsed well
-                self.cmd = m.group(1)
-                self.args = m.group(2).strip()
+            cmdline = self.raw.split('#')[0]
+            if cmdline:
+                m = re.match('[ \t]*([^ \t]+)[ \t]+([^#]*)', cmdline)
+                if m is None:
+                    print("Cannot parse", repr(cmdline))
+                    assert(False)
+                else:
+                    # parsed well
+                    self.cmd = m.group(1)
+                    self.args = m.group(2).strip()
 
     def is_open(self):
         if self.raw is None:
