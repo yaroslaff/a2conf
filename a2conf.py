@@ -41,7 +41,7 @@ if args.cmd:
                     continue
 
             for cnode in vhost.children():
-                if cnode.cmd.lower() in args.cmd:
+                if cnode.cmd and cnode.cmd.lower() in args.cmd:
                     if args.args or args.uargs:
                         # process only args
                         arglist.extend(filter(None, cnode.args.split(" ")))
