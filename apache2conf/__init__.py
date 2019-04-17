@@ -33,10 +33,11 @@ class Node(object):
         elif self.raw:
             m = re.match('[ \t]*([^ \t]+)[ \t]+([^#]*)', self.raw)
             if m is None:
-                print("Cannot parse", repr(self.raw))
                 assert(False)
-            self.cmd = m.group(1)
-            self.args = m.group(2).strip()
+            else:
+                # parsed well
+                self.cmd = m.group(1)
+                self.args = m.group(2).strip()
 
     def is_open(self):
         if self.raw is None:
