@@ -7,6 +7,7 @@ parser = argparse.ArgumentParser(description='Apache config parser')
 parser.add_argument('-i', '--infile', help='input filename')
 parser.add_argument('--cmd', default=list(), nargs='*', help='show all this commands', type=str.lower)
 parser.add_argument('--args', default=False, action='store_true', help='show only arguments')
+parser.add_argument('--uargs', default=False, action='store_true', help='show only unique arguments')
 
 args = parser.parse_args()
 
@@ -28,11 +29,17 @@ if args.cmd:
             names = list()
             for cnode in vhost.children():
                 if cnode.cmd.lower() in args.cmd:
-                    if args.args:
+                    if args.args or args.uargs:
                         # process only args
                         arglist.extend(filter(None, cnode.args.split(" ")))
                     else:
                         print(cnode.cmd, cnode.args)
+
     if args.args:
         print(' '.join(arglist))
+
+    if args.uargs:
+        uargs = set(arglist)
+        print(' '.join(uargs))
+
 

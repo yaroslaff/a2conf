@@ -22,6 +22,32 @@
 </VirtualHost>
 ~~~
 
+# a2conf.py 
+## Examples
+Just smart grep
+~~~
+$ ./a2conf.py -i /etc/apache2/sites-enabled/example.conf --cmd ServerName Serveralias
+ServerName example.com
+ServerAlias www.example.com 1.example.com 2.example.com
+ServerName example.com
+ServerAlias www.example.com 1.example.com 2.example.com
+
+$ ./a2conf.py -i /etc/apache2/sites-enabled/example.conf --cmd SSLCertificateFile
+SSLCertificateFile /etc/letsencrypt/live/example.com/fullchain.pem
+~~~
+
+Only arguments (one line, space-separated, non-unique):
+~~~
+./a2conf.py -i /etc/apache2/sites-enabled/example.conf --cmd ServerName Serveralias --args
+example.com www.example.com 1.example.com 2.example.com example.com www.example.com 1.example.com 2.example.com
+~~~
+
+Unique arguments:
+~~~
+$ ./a2conf.py -i /etc/apache2/sites-enabled/example.conf --cmd ServerName Serveralias --uargs
+2.example.com 1.example.com www.example.com example.com
+~~~
+
 # Node class
 
 ## Properties and methods
