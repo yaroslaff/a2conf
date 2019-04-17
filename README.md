@@ -1,12 +1,24 @@
 # Testing environment:
 ~~~
-$ cat /etc/apache2/sites-enabled/example.conf 
 <VirtualHost *:80>
 	DocumentRoot /var/www/example
-	ServerName example.com
+	ServerName example.com  # .... OUR TEST SITE ....
 	ServerAlias www.example.com 1.example.com 2.example.com
 	DirectoryIndex index.html index.htm default.htm index.php
 	Options -Indexes +FollowSymLinks
+</VirtualHost>
+
+<VirtualHost *:443>
+	DocumentRoot /var/www/example
+	ServerName example.com  # .... OUR TEST SITE ....
+	ServerAlias www.example.com 1.example.com 2.example.com
+	DirectoryIndex index.html index.htm default.htm index.php
+	Options -Indexes +FollowSymLinks
+
+	SSLEngine On
+	SSLCertificateFile /etc/letsencrypt/live/example.com/fullchain.pem
+    	SSLCertificateKeyFile /etc/letsencrypt/live/example.com/privkey.pem
+    	SSLCertificateChainFile /etc/letsencrypt/live/example.com/chain.pem
 </VirtualHost>
 ~~~
 
@@ -28,6 +40,9 @@ children,
 ## Examples
 Reading
 ~~~
+#!/usr/bin/env python3
+import apache2conf
+root = apache2conf.Node(name='#root')
 root.read_file('/etc/apache2/sites-available/example.conf')
 def recdump(node, prefix=""):
     if node.section:
@@ -48,4 +63,14 @@ Output:
      'ServerAlias' 'www.example.com 1.example.com 2.example.com'
      'DirectoryIndex' 'index.html index.htm default.htm index.php'
      'Options' '-Indexes +FollowSymLinks'
+   SECTION VirtualHost ARGS *:443 CONTENT 9
+     'DocumentRoot' '/var/www/example'
+     'ServerName' 'example.com'
+     'ServerAlias' 'www.example.com 1.example.com 2.example.com'
+     'DirectoryIndex' 'index.html index.htm default.htm index.php'
+     'Options' '-Indexes +FollowSymLinks'
+     'SSLEngine' 'On'
+     'SSLCertificateFile' '/etc/letsencrypt/live/example.com/fullchain.pem'
+     'SSLCertificateKeyFile' '/etc/letsencrypt/live/example.com/privkey.pem'
+     'SSLCertificateChainFile' '/etc/letsencrypt/live/example.com/chain.pem'
 ~~~
