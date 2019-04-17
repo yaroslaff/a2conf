@@ -11,7 +11,7 @@
 <VirtualHost *:443>
 	DocumentRoot /var/www/example
 	ServerName example.com  # .... OUR TEST SITE ....
-	ServerAlias www.example.com 1.example.com 2.example.com
+	ServerAlias www.example.com 1.example.com 2.example.com secure.example.com
 	DirectoryIndex index.html index.htm default.htm index.php
 	Options -Indexes +FollowSymLinks
 
@@ -30,7 +30,7 @@ $ ./a2conf.py -i /etc/apache2/sites-enabled/example.conf --cmd ServerName Server
 ServerName example.com
 ServerAlias www.example.com 1.example.com 2.example.com
 ServerName example.com
-ServerAlias www.example.com 1.example.com 2.example.com
+ServerAlias www.example.com 1.example.com 2.example.com secure.example.com
 
 $ ./a2conf.py -i /etc/apache2/sites-enabled/example.conf --cmd SSLCertificateFile
 SSLCertificateFile /etc/letsencrypt/live/example.com/fullchain.pem
@@ -39,13 +39,20 @@ SSLCertificateFile /etc/letsencrypt/live/example.com/fullchain.pem
 Only arguments (one line, space-separated, non-unique):
 ~~~
 ./a2conf.py -i /etc/apache2/sites-enabled/example.conf --cmd ServerName Serveralias --args
-example.com www.example.com 1.example.com 2.example.com example.com www.example.com 1.example.com 2.example.com
+example.com www.example.com 1.example.com 2.example.com example.com www.example.com 1.example.com 2.example.com secure.example.com
 ~~~
 
 Unique arguments:
 ~~~
 $ ./a2conf.py -i /etc/apache2/sites-enabled/example.conf --cmd ServerName Serveralias --uargs
-2.example.com 1.example.com www.example.com example.com
+www.example.com secure.example.com 2.example.com example.com 1.example.com
+~~~
+
+Filtering sections
+~~~
+./a2conf.py -i /etc/apache2/sites-enabled/example.conf --cmd servername serveralias --filter sslengine on
+ServerName example.com
+ServerAlias www.example.com 1.example.com 2.example.com secure.example.com
 ~~~
 
 # Node class

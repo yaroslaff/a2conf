@@ -97,10 +97,15 @@ class Node(object):
                 ret.extend(c.all_nodes())
         return ret
 
-    def get_node(self, regex):
+    def get_node_re(self, regex):
         for c in self.content:
             if re.match(regex, c.raw, re.IGNORECASE):
                 return c
+
+    def get_nodes_cmd(self, cmd):
+        for c in self.content:
+            if c.cmd and c.cmd.lower() == cmd.lower():
+                yield(c)
 
     def add_prefix(self,prefix, regex):
         n = self.get_node(regex)
