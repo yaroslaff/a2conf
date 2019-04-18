@@ -1,0 +1,109 @@
+#!/usr/bin/env python3
+
+import argparse
+import a2conf
+import logging
+import sys
+
+parser = argparse.ArgumentParser(description='Apache config parser')
+parser.add_argument('-i', '--infile', help='input filename')
+parser.add_argument('--cmd', default=list(), nargs='*', help='show all these commands', type=str.lower)
+parser.add_argument('--filter', nargs=2, metavar=('Command','Argument'),
+                    help='Process only sections with this command/argument (command can be "ServerName,ServerList")', type=str.lower)
+parser.add_argument('--negative', default=False, action='store_true', help='Negative filtering')
+parser.add_argument('--args', default=False, action='store_true', help='show only arguments')
+parser.add_argument('--uargs', default=False, action='store_true', help='show only unique arguments')
+parser.add_argument('--vhost', default=None, nargs='?', const='', help='VHOST format prefix')
+parser.add_argument('-v', '--verbose', default=False, action='store_true', help='verbose')
+
+
+args = parser.parse_args()
+
+
+if args.verbose:
+    loglevel = logging.DEBUG
+else:
+    loglevel = logging.INFO
+
+log = logging.getLogger('a2conf')
+log.setLevel(loglevel)
+logh = logging.StreamHandler(stream=sys.stderr)
+logh.setFormatter(logging.Formatter('%(message)s', '%Y-%m-%d %H:%M:%S'))
+log.addHandler(logh)
+
+log.debug("DEBUG")
+
+if not args.infile:
+    print("Need -i <filename>")
+    exit()
+
+# read file
+root = a2conf.Node(name='#root')
+parent = root
+
+root.read_file(args.infile)
+
+arglist = list()
+
+for vhost in root.all_nodes():
+    if vhost.section and vhost.section.lower() == 'virtualhost':
+
+        # skip or process?
+        if args.filter:
+            process = False
+            for checknode in vhost.get_nodes_cmd(args.filter[0].split(',')):
+                checkargs = checknode.args.split(' ')
+                if args.filter[1].lower() in map(str.lower, checkargs):
+                    process = True
+
+            if args.negative:
+                process = not process
+
+            if not process:
+                log.debug("Skipping VHost: {}".format(vhost))
+                continue
+            else:
+                log.debug("Process VHost: {}".format(vhost))
+
+        ctx=dict()
+        ctx['vhostarg'] = vhost.args
+
+        if args.vhost is not None:
+            # reset arglist if we use per-vhost output
+            arglist = list()
+
+        # now process all statements inside vhost
+        for cnode in vhost.children():
+            # f
+            if cnode.cmd:
+                ctx[cnode.cmd.lower()] = cnode.args
+
+                if args.cmd:
+                    if cnode.cmd.lower() in args.cmd:
+                        if args.args or args.uargs:
+                            # process only args
+                            arglist.extend(filter(None, cnode.args.split(" ")))
+                        else:
+                            print(cnode.cmd, cnode.args)
+
+        ctx['arglist'] = ' '.join(arglist)
+        ctx['uarglist'] = ' '.join(set(arglist))
+
+        if args.vhost is not None:
+            # per-vhost
+            log.debug(ctx)
+            #print(repr(args.vhost), vhost, repr(vhost.args))
+            print(args.vhost.format(**ctx))
+
+
+if args.vhost is None:
+
+    # per-file summary
+    if args.args:
+        print(' '.join(arglist))
+
+    if args.uargs:
+        uargs = set(arglist)
+        print(' '.join(uargs))
+
+

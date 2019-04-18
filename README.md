@@ -55,6 +55,13 @@ ServerName example.com
 ServerAlias www.example.com 1.example.com 2.example.com secure.example.com
 ~~~
 
+Can add `--neg` (`--negative`) to invert filtering
+
+Per-vhost info
+~~~
+
+~~~
+
 # Node class
 
 ## Properties and methods
