@@ -66,7 +66,7 @@ for vhost in root.all_nodes():
                 log.debug("Process VHost: {}".format(vhost))
 
         ctx=dict()
-        ctx['vhostarg'] = vhost.args
+        ctx['vhostargs'] = vhost.args
 
         if args.vhost is not None:
             # reset arglist if we use per-vhost output
@@ -86,8 +86,8 @@ for vhost in root.all_nodes():
                         else:
                             print(cnode.cmd, cnode.args)
 
-        ctx['arglist'] = ' '.join(arglist)
-        ctx['uarglist'] = ' '.join(set(arglist))
+        ctx['args'] = ' '.join(arglist)
+        ctx['uargs'] = ' '.join(set(arglist))
 
         if args.vhost is not None:
             # per-vhost

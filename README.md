@@ -59,8 +59,12 @@ Can add `--neg` (`--negative`) to invert filtering
 
 Per-vhost info
 ~~~
-
+$ bin/a2conf -i /etc/apache2/sites-enabled/example.conf  --cmd servername serveralias --uargs --vhost '{vhostargs} {args}'
+*:80 example.com www.example.com example.com 1.example.com 2.example.com
+*:443 example.com www.example.com 1.example.com 2.example.com secure.example.com
 ~~~
+
+You can get list of all available tokens with `-v`.
 
 # Node class
 
