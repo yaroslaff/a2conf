@@ -1,3 +1,5 @@
+a2conf is utility and python module to work with apache2 config files
+
 # Testing environment:
 ~~~
 <VirtualHost *:80>
@@ -69,24 +71,32 @@ You can get list of all available tokens with `-v`.
 # Node class
 
 ## Properties and methods
+
 **raw** - text line as-is, with all spaces, tabs and with comments
+
 **cmd** - cmd ('ServerName') without args or None (if section)
+
 **section** - section (e.g. 'VirtualHost')
+
 **args** - one text line args to cmd or section. for vhost args could be '*:80', for ServerAlias: 'example.com example.org'
 
 ### Structure
 For container sections (VirtualHost) attr content is not None. For usual lines (ServerName) content is None
 
 **content** - list of child nodes or None
-**children()** - return generator for all children  nodes (e.g. for VirtualHost node). Generator is empty if no 
-children,
+
+**children()** - return generator for all children  nodes (e.g. for VirtualHost node). Generator is empty if no
+children
+
+## Limitations
+Any 'Include*' directives are not supported for now.
 
 ## Examples
 Reading
 ~~~
 #!/usr/bin/env python3
-import apache2conf
-root = apache2conf.Node(name='#root')
+import a2conf
+root = a2conf.Node(name='#root')
 root.read_file('/etc/apache2/sites-available/example.conf')
 def recdump(node, prefix=""):
     if node.section:

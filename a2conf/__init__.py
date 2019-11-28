@@ -9,19 +9,21 @@ class Node(object):
     def __init__(self, raw=None, parent=None, name=None):
         self.raw = raw
         self.parent = parent
-        self.content = None # children
+        self.content = list() # children
         self.prefix = ' '*4
         self.section = None # Section e.g. "VirtualHost" or None
-        self.args = None # Args to section (VirtualHost), e.g. "*:80" or
         self.cmd = None # Command, e.g. "ServerName"
+        self.args = None # Args to section (VirtualHost), e.g. "*:80" or
 
 
         if name:
             self.name = name
         else:
             if self.raw:
-                # guess name
-                self.name = self.raw.strip()
+                # guess name, ServerName or <VirtualHost>
+                self.name = self.raw.strip().split(' ')[0]
+                if self.name.startswith('<') and not self.name.endswith('>'):
+                    self.name += '>'
             else:
                 self.name = '#root'
 
@@ -43,7 +45,12 @@ class Node(object):
                     self.cmd = m.group(1)
                     self.args = m.group(2).strip()
 
+
+    def __repr__(self):
+        return("<{}>".format(self.name))
+
     def is_open(self):
+        """ Return True if this node opens section, e.g <VirtualHost> or <IfModule>"""
         if self.raw is None:
             return False
 
@@ -52,6 +59,7 @@ class Node(object):
         return False
 
     def is_close(self):
+        """ Return True if this node closes section"""
         if self.raw is None:
             return False
 
@@ -60,6 +68,7 @@ class Node(object):
         return False
 
     def add(self, child):
+        """ Append child to node """
         if self.content is None:
             self.content = list()
         self.content.append(child)
@@ -87,12 +96,19 @@ class Node(object):
         self.content = [ c for c in self.content if ff(regex, c) ]
 
 
-    def children(self):
-        #print "get children from ", self.name
+    def children(self, cmd=None, recursive=False):
         if self.content:
             for c in self.content:
-                # print "YIELD", c, repr(c.raw), c.name
-                yield c
+                if cmd:
+                    # filter by cmd/section
+                    if c.name.lower() == cmd.lower():
+                        yield c
+                    if recursive and c.content:
+                        for subc in c.children(cmd=cmd, recursive=recursive):
+                            yield subc
+                else:
+                    # print "YIELD", c, repr(c.raw), c.name
+                    yield c
 
     def all_nodes(self):
         ret = list()
@@ -133,7 +149,6 @@ class Node(object):
                 l = l.strip()
                 if not l:
                     continue
-
                 node = Node(l, parent)
                 if node.is_open():
                     parent.add(node)
