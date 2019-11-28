@@ -257,7 +257,7 @@ def main():
                         help='One config file path')
     parser.add_argument('-i', '--ip', nargs='*',
                         help='Default addresses. Autodetect if not specified')
-    parser.add_argument('--ledir', default=def_dir, metavar='LETSENCRYPT_DIR_PATH',
+    parser.add_argument('--ledir', default=def_ledir, metavar='LETSENCRYPT_DIR_PATH',
                         help='Lets Encrypt directory def: {}'.format(def_ledir))
 
     args = parser.parse_args()
