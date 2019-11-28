@@ -214,7 +214,7 @@ def process_file(path, local_ip_list, args):
             test_basename = 'certbot_diag_' + ''.join(random.choice(string.ascii_uppercase + string.ascii_lowercase + string.digits) for _ in range(10))
             test_dir = os.path.join(droot, '.well-known', 'acme-challenge')
             test_file = os.path.join(test_dir, test_basename)
-            report.info("Test file path:" + test_file)
+            report.info("Test file path: " + test_file)
             test_url = 'http://'+servername+'/.well-known/acme-challenge/' + test_basename
             report.info("Test file URL: " + test_url)
 
@@ -226,7 +226,7 @@ def process_file(path, local_ip_list, args):
             log.debug('test URL '+test_url)
             r = requests.get(test_url, allow_redirects=True)
             if r.status_code != 200:
-                report.problem('URL {} got status code {}'.format(test_url, r.status_code))
+                report.problem('URL {} got status code {}. Maybe Alias or RewriteRule working?'.format(test_url, r.status_code))
 
             if r.text == test_data:
                 report.info("test data matches")
