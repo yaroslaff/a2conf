@@ -219,7 +219,7 @@ def process_file(path, local_ip_list, args):
             report.info("Test file URL: " + test_url)
 
             log.debug('create test file ' + test_file)
-            os.makedirs(test_dir)
+            os.makedirs(test_dir, exist_ok=True)
             with open(test_file, "w") as f:
                 f.write(test_data)
 
