@@ -233,7 +233,7 @@ def process_file(path, local_ip_list, args):
             else:
                 report.problem('test data not matches')
 
-            unlink(test_file)
+            os.unlink(test_file)
         else:
             report.problem("skipped HTTP test because document root not exists")
         #
