@@ -224,9 +224,9 @@ def process_file(path, local_ip_list, args):
                 f.write(test_data)
 
             log.debug('test URL '+test_url)
-            r = requests.get(test_url)
+            r = requests.get(test_url, allow_redirects=True)
             if r.status_code != 200:
-                report.problem('URL {} got status code {}'.format(r.status_code))
+                report.problem('URL {} got status code {}'.format(test_url, r.status_code))
 
             if r.text == test_data:
                 report.info("test data matches")
