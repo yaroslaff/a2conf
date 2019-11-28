@@ -107,6 +107,8 @@ def process_file(path, local_ip_list, args):
     root = a2conf.Node(name='#root')
     root.read_file(path)
 
+    lc = None
+
     for vhost in root.children(cmd='<VirtualHost>'):
         servername = next(vhost.children('servername')).args
         report = Report(servername)
@@ -188,17 +190,20 @@ def process_file(path, local_ip_list, args):
         else:
             report.problem("Missing LetsEncrypt conf file " + leconf)
 
-        for domain in lc.domains:
-            if domain in all_names:
-                report.info('domain {} listed'.format(domain))
-                ddroot = lc.get_droot(domain)
-                if ddroot == droot:
-                    report.info('Domain name {} has valid document root'.format(domain))
-                else:
-                    report.info('DocRoot mismatch for {}. Site: {} Domain: {}'.format(domain, droot, ddroot))
+        if lc:
+            for domain in lc.domains:
+                if domain in all_names:
+                    report.info('domain {} listed'.format(domain))
+                    ddroot = lc.get_droot(domain)
+                    if ddroot == droot:
+                        report.info('Domain name {} has valid document root'.format(domain))
+                    else:
+                        report.info('DocRoot mismatch for {}. Site: {} Domain: {}'.format(domain, droot, ddroot))
 
-            else:
-                report.problem('domain {} not in virthost names'.format(domain))
+                else:
+                    report.problem('domain {} not in virthost names'.format(domain))
+        else:
+            report.problem("skipped domain/docroot checks because no letsencrypt config")
 
 
         #
@@ -223,10 +228,14 @@ def process_file(path, local_ip_list, args):
             if r.status_code != 200:
                 report.problem('URL {} got status code {}'.format(r.status_code))
 
-            if r.text != test_data:
+            if r.text == test_data:
+                report.info("test data matches")
+            else:
                 report.problem('test data not matches')
 
             unlink(test_file)
+        else:
+            report.problem("skipped HTTP test because document root not exists")
         #
         # Final debug
         #
