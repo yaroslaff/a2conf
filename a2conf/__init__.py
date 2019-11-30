@@ -36,7 +36,7 @@ class Node(object):
         elif self.raw:
             cmdline = self.raw.split('#')[0]
             if cmdline:
-                m = re.match('[ \t]*([^ \t]+)[ \t]+([^#]*)', cmdline)
+                m = re.match('[ \t]*([^ \t]+)[ \t]*([^#]*)', cmdline)
                 if m is None:
                     print("Cannot parse", repr(cmdline))
                     assert(False)
