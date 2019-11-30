@@ -17,7 +17,7 @@ def process_file(path, args):
         try:
             servername = next(vhost.children('servername')).args
         except StopIteration:
-            print("WARNING skip vhost {} in file {} because no ServerName".format(vhost, path))
+            print("WARNING skip vhost {} ({}) in file {} because no ServerName".format(vhost, vhost.args, path))
             continue
 
         try:
