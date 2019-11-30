@@ -13,24 +13,27 @@ def process_file(path, args):
     root = a2conf.Node(name='#root')
     root.read_file(path)
 
-    for vhost in root.children(cmd='<VirtualHost>'):
+    for vhost in root.children('<VirtualHost>'):
         servername = next(vhost.children('servername')).args
         try:
             sslengine = next(vhost.children('sslengine'))
         except StopIteration:
             continue
-
-        if sslengine.args != 'on':
-            log.debug("Skip {} because sslengine args are: {}".format(vhost, repr(sslengine.args)))
+        if sslengine.args.lower() != 'on':
             continue
 
         iname = args.prefix + servername
-        print("iname:", iname)
         i = project.indicator(iname,
                               method = 'sslcert|host={}|port=443|days=20'.format(servername),
                               policy = args.policy,
                               desc = args.desc)
-        i.update('OK')
+        if args.dry:
+            print(i,'(dry run)')
+        else:
+            print(i)
+
+        if not args.dry:
+            i.update('OK')
 
 
 def main():
@@ -54,6 +57,8 @@ def main():
                         help='okerr policy (def: {})'.format(def_policy))
     parser.add_argument('--desc', default=def_desc, metavar='DESC',
                         help='description (def: {})'.format(def_desc))
+    parser.add_argument('--dry', default=False, action='store_true',
+                        help='dry run, do not update anything')
 
     args = parser.parse_args()
 
