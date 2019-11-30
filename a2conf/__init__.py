@@ -96,15 +96,15 @@ class Node(object):
         self.content = [ c for c in self.content if ff(regex, c) ]
 
 
-    def children(self, cmd=None, recursive=False):
+    def children(self, name=None, recursive=False):
         if self.content:
             for c in self.content:
-                if cmd:
+                if name:
                     # filter by cmd/section
-                    if c.name.lower() == cmd.lower():
+                    if c.name.lower() == name.lower():
                         yield c
                     if recursive and c.content:
-                        for subc in c.children(cmd=cmd, recursive=recursive):
+                        for subc in c.children(name=name, recursive=recursive):
                             yield subc
                 else:
                     # print "YIELD", c, repr(c.raw), c.name

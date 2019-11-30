@@ -3,7 +3,7 @@ import sys
 import a2conf
 root = a2conf.Node(name='#root')
 root.read_file(sys.argv[1])
-for vhost in root.children(cmd = '<VirtualHost>'):
+for vhost in root.children('<VirtualHost>'):
     servername = next(vhost.children('servername')).args
     try:
         ssl_option = next(vhost.children('sslengine')).args

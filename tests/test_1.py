@@ -57,24 +57,24 @@ class TestClass:
         assert(1==1)
         root = a2conf.Node(name='#root')
         root.read_file(files['c1'])
-        assert(len(list(root.children(cmd='<VirtualHost>'))) == 1)
+        assert(len(list(root.children('<VirtualHost>'))) == 1)
 
-        vh = list(root.children(cmd='<VirtualHost>'))[0]
+        vh = list(root.children('<VirtualHost>'))[0]
 
-        assert(len(list(vh.children(cmd='ServerAlias'))) == 2)
+        assert(len(list(vh.children('ServerAlias'))) == 2)
 
-        assert(len(list(vh.children(cmd='serveralias'))) == 2)
-        assert(len(list(vh.children(cmd='SERVERALIAS'))) == 2)
+        assert(len(list(vh.children('serveralias'))) == 2)
+        assert(len(list(vh.children('SERVERALIAS'))) == 2)
 
 
         aliases = list()
-        for alias_node in vh.children(cmd='ServerAlias'):
+        for alias_node in vh.children('ServerAlias'):
             for alias in alias_node.args.split(' '):
                 aliases.append(alias)
         assert(len(aliases) == 3)
 
         # should not found because not recursive
-        assert(len(list(vh.children(cmd='sslengine', recursive=False))) == 0)
+        assert(len(list(vh.children('sslengine', recursive=False))) == 0)
 
         # should not found because not recursive
-        assert(len(list(vh.children(cmd='sslengine', recursive=True ))) == 1)
+        assert(len(list(vh.children('sslengine', recursive=True ))) == 1)

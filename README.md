@@ -1,72 +1,53 @@
-a2conf is utility and python module to work with apache2 config files
+a2conf is utility and python module to work with apache2 config files.
 
-# Testing environment:
-~~~
-<VirtualHost *:80>
-	DocumentRoot /var/www/example
-	ServerName example.com  # .... OUR TEST SITE ....
-	ServerAlias www.example.com 1.example.com 2.example.com
-	DirectoryIndex index.html index.htm default.htm index.php
-	Options -Indexes +FollowSymLinks
-</VirtualHost>
+For all examples we will use file [example.conf](https://gitlab.com/yaroslaff/a2conf/raw/master/examples/example.conf)
+which is available `examples/example.conf`. Use `export PYTHONPATH=.` to use module if it's not installed.
 
-<VirtualHost *:443>
-	DocumentRoot /var/www/example
-	ServerName example.com  # .... OUR TEST SITE ....
-	ServerAlias www.example.com 1.example.com 2.example.com secure.example.com
-	DirectoryIndex index.html index.htm default.htm index.php
-	Options -Indexes +FollowSymLinks
-
-	SSLEngine On
-	SSLCertificateFile /etc/letsencrypt/live/example.com/fullchain.pem
-    	SSLCertificateKeyFile /etc/letsencrypt/live/example.com/privkey.pem
-    	SSLCertificateChainFile /etc/letsencrypt/live/example.com/chain.pem
-</VirtualHost>
-~~~
-
-# a2conf.py 
+# a2conf.py utility
 ## Examples
 Just smart grep
 ~~~
-$ ./a2conf.py -i /etc/apache2/sites-enabled/example.conf --cmd ServerName Serveralias
+$ bin/a2conf -i examples/example.conf --cmd ServerName ServerAlias
 ServerName example.com
-ServerAlias www.example.com 1.example.com 2.example.com
+ServerAlias www.example.com example.com 1.example.com 2.example.com
 ServerName example.com
 ServerAlias www.example.com 1.example.com 2.example.com secure.example.com
 
-$ ./a2conf.py -i /etc/apache2/sites-enabled/example.conf --cmd SSLCertificateFile
+$ bin/a2conf -i examples/example.conf --cmd SSLCertificateFile
 SSLCertificateFile /etc/letsencrypt/live/example.com/fullchain.pem
 ~~~
 
 Only arguments (one line, space-separated, non-unique):
 ~~~
-./a2conf.py -i /etc/apache2/sites-enabled/example.conf --cmd ServerName Serveralias --args
-example.com www.example.com 1.example.com 2.example.com example.com www.example.com 1.example.com 2.example.com secure.example.com
+$ bin/a2conf -i examples/example.conf --cmd ServerName ServerAlias --args
+example.com www.example.com example.com 1.example.com 2.example.com example.com www.example.com 1.example.com 2.example.com secure.example.com
 ~~~
 
 Unique arguments:
 ~~~
-$ ./a2conf.py -i /etc/apache2/sites-enabled/example.conf --cmd ServerName Serveralias --uargs
-www.example.com secure.example.com 2.example.com example.com 1.example.com
+$ bin/a2conf -i examples/example.conf --cmd ServerName ServerAlias --uargs
+secure.example.com 1.example.com www.example.com example.com 2.example.com
 ~~~
 
 Filtering sections
 ~~~
-./a2conf.py -i /etc/apache2/sites-enabled/example.conf --cmd servername serveralias --filter sslengine on
-ServerName example.com
-ServerAlias www.example.com 1.example.com 2.example.com secure.example.com
-~~~
+# Only SSL hosts. Note: secure.example.com listed
+$ bin/a2conf -i examples/example.conf --cmd ServerName ServerAlias --uargs --filter sslengine on
+1.example.com example.com secure.example.com 2.example.com www.example.com
 
-Can add `--neg` (`--negative`) to invert filtering
+# Inverted filtering, hosts without SSLEngine on. Note: secure.example.com not listed
+$ bin/a2conf -i examples/example.conf --cmd ServerName ServerAlias --uargs --filter sslengine on --neg
+example.com 2.example.com 1.example.com www.example.com
+~~~
 
 Per-vhost info
 ~~~
-$ bin/a2conf -i /etc/apache2/sites-enabled/example.conf  --cmd servername serveralias --uargs --vhost '{vhostargs} {args}'
+$ bin/a2conf -i examples/example.conf  --cmd servername serveralias --uargs --vhost '{vhostargs} {args}'
 *:80 example.com www.example.com example.com 1.example.com 2.example.com
 *:443 example.com www.example.com 1.example.com 2.example.com secure.example.com
 ~~~
 
-You can get list of all available tokens with `-v`.
+You can get list of all available tokens in verbose mode (`-v` option).
 
 # Node class
 
@@ -80,21 +61,22 @@ You can get list of all available tokens with `-v`.
 
 **args** - one text line args to cmd or section. for vhost args could be '*:80', for ServerAlias: 'example.com example.org'
 
+**name** - name of node. cmd if node has cmd, or section name (in brackets) if this is section. e.g. 'ServerName' or
+'<VirtualHost>'
+
 ### Structure
 For container sections (VirtualHost) attr content is not None. For usual lines (ServerName) content is None
 
 **content** - list of child nodes or None
 
-**children()** - return generator for all children  nodes (e.g. for VirtualHost node). Generator is empty if no
-children
+**children(name=None, recursive=None)** - return generator for all children  nodes (e.g. for VirtualHost node). Generator is empty if no
+children. If name specified, generator will return only nodes with this name (e.g. 'servername' or '<VirtualHost>'). If recursive is On,
+generator will return nested nodes too (e.g. what is inside `<IfModule>` or `<Directory>` settings)
 
 ## Limitations
 Any 'Include*' directives are not supported for now.
 
 ## Examples
-For example, we will use example config file `examples/example.conf` with two virtual sites, one plain HTTP,
-other is HTTPS.
-
 
 ### Just dump apache config
 `examples/ex1_dump.py` just loads config and dumps its structure:
@@ -143,7 +125,7 @@ import sys
 import a2conf
 root = a2conf.Node(name='#root')
 root.read_file(sys.argv[1])
-for vhost in root.children(cmd = '<VirtualHost>'):
+for vhost in root.children('<VirtualHost>'):
     servername = next(vhost.children('servername')).args
     try:
         ssl_option = next(vhost.children('sslengine')).args
