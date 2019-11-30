@@ -14,7 +14,12 @@ def process_file(path, args):
     root.read_file(path)
 
     for vhost in root.children('<VirtualHost>'):
-        servername = next(vhost.children('servername')).args
+        try:
+            servername = next(vhost.children('servername')).args
+        except StopIteration:
+            print("WARNING skip vhost {} in file {} because no ServerName".format(vhost, path))
+            continue
+
         try:
             sslengine = next(vhost.children('sslengine'))
         except StopIteration:
