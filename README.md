@@ -98,7 +98,7 @@ recdump(root)
 
 Output:
 ~~~
-xenon@braconnier:~/repo/a2conf$ examples/ex1_dump.py examples/example.conf
+$ examples/ex1_dump.py examples/example.conf
    SECTION VirtualHost ARGS *:80 CONTENT 6
      'DocumentRoot' '/var/www/example'
      'ServerName' 'example.com'
@@ -138,6 +138,6 @@ for vhost in root.children('<VirtualHost>'):
 
 Output:
 ~~~
-xenon@braconnier:~/repo/a2conf$ examples/ex2_query.py examples/example.conf
+$ examples/ex2_query.py examples/example.conf
 example.com has SSL enabled
 ~~~
