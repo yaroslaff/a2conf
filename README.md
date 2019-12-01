@@ -19,12 +19,11 @@ SSLCertificateFile /etc/letsencrypt/live/example.com/fullchain.pem
 
 Only arguments (one line, space-separated, non-unique):
 ~~~shell
+# All arguments (including duplicates)
 $ bin/a2conf examples/example.conf --cmd ServerName ServerAlias --args
 example.com www.example.com example.com 1.example.com 2.example.com example.com www.example.com 1.example.com 2.example.com secure.example.com
-~~~
 
-Unique arguments:
-~~~shell
+# Only unique arguments
 $ bin/a2conf examples/example.conf --cmd ServerName ServerAlias --uargs
 secure.example.com 1.example.com www.example.com example.com 2.example.com
 ~~~
@@ -40,11 +39,16 @@ $ bin/a2conf examples/example.conf --cmd ServerName ServerAlias --uargs --filter
 example.com 2.example.com 1.example.com www.example.com
 ~~~
 
-Per-vhost info
+Per-vhost info:
 ~~~shell
-$ bin/a2conf examples/example.conf  --cmd servername serveralias --uargs --vhost '{vhostargs} {args}'
-*:80 example.com www.example.com example.com 1.example.com 2.example.com
-*:443 example.com www.example.com 1.example.com 2.example.com secure.example.com
+# show documentroot for virtualhosts
+$ bin/a2conf examples/example.conf  --cmd servername serveralias --uargs --vhost '{vhostargs} {servername} {documentroot}'
+*:80 example.com /var/www/example
+*:443 example.com /var/www/example
+
+# ... only for virtualhosts with SSLEngine On
+$ bin/a2conf examples/example.conf  --cmd servername serveralias --uargs --vhost '{vhostargs} {servername} {documentroot}' --filter sslengine on
+*:443 example.com /var/www/example
 
 # What certfile we use for secure.example.com ?
 $ bin/a2conf examples/example.conf --vhost '{servername} {sslcertificatefile}' --filter ServerName,ServerAlias secure.example.com
@@ -54,13 +58,6 @@ example.com /etc/letsencrypt/live/example.com/fullchain.pem
 $ bin/a2conf examples/example.conf --vhost '{servername} {sslcertificatefile}' --filter ServerName,ServerAlias 1.example.com  --undef _skip
 example.com /etc/letsencrypt/live/example.com/fullchain.pem
 ~~~
-
-List ServerName and DocumentRoot for each virtualhost with SSL
-~~~shell
-$ bin/a2conf examples/example.conf --vhost '{servername} {documentroot}' --filter SSLEngine on
-example.com /var/www/example
-~~~
-
 You can get list of all available tokens for `--vhost` option in verbose mode (`-v` option).
 
 # Node class
