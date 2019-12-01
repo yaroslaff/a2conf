@@ -6,7 +6,7 @@ import os
 import glob
 
 class Node(object):
-    def __init__(self, raw=None, parent=None, name=None, path=None, line=None, includes=True):
+    def __init__(self, read=None, raw=None, parent=None, name=None, path=None, line=None, includes=True):
         self.raw = raw
         self.parent = parent
         self.content = list() # children
@@ -38,7 +38,8 @@ class Node(object):
         elif self.is_close():
             pass
         elif self.raw:
-            cmdline = self.raw.split('#')[0]
+            cmdline = self.raw.split('#')[0].strip()
+
             if cmdline:
                 m = re.match('[ \t]*([^ \t]+)[ \t]*([^#]*)', cmdline)
                 if m is None:
@@ -49,6 +50,8 @@ class Node(object):
                     self.cmd = m.group(1)
                     self.args = m.group(2).strip()
 
+        if read:
+            self.read_file(read)
 
     def __repr__(self):
         return("<{}>".format(self.name))
@@ -115,35 +118,21 @@ class Node(object):
                     for subc in c.children(name=name, recursive=recursive):
                         yield subc
 
-
-    def all_nodes(self):
-        ret = list()
-        ret.append(self)
-        for c in self.content:
-            if c.is_open():
-                ret.extend(c.all_nodes())
-        return ret
-
-    def get_node_re(self, regex):
-        for c in self.content:
-            if re.match(regex, c.raw, re.IGNORECASE):
-                return c
-
-    def get_nodes_cmd(self, cmdlist):
-        lowlist = list(map(str.lower, cmdlist))
-        for c in self.content:
-            if c.cmd and c.cmd.lower() in lowlist:
-                yield(c)
-
-    def add_prefix(self,prefix, regex):
-        n = self.get_node(regex)
-        n.raw = prefix + n.raw
-        n.name = n.raw
-
+    def first(self, name, recursive=False):
+        """ Wrapper for children to get only first element or None
+        :param name: name of element, e.g. ServerName or SSLEngine
+        :param recursive:
+        :return: Element or None
+        """
+        try:
+            return next(self.children(name, recursive=recursive))
+        except StopIteration:
+            return None
 
     def extend(self, n):
-        for c in n.content:
-            self.content.append(c)
+        # for c in n.content:
+        #     self.content.append(c)
+        self.content.extend(n.content)
 
     def read_file(self, filename):
 
@@ -159,7 +148,7 @@ class Node(object):
                 l = l.strip()
                 if not l:
                     continue
-                node = Node(l, parent, path = filename, line = line)
+                node = Node(raw=l, parent = parent, path = filename, line = line)
 
                 if node.is_open():
                     parent.add(node)
@@ -174,9 +163,9 @@ class Node(object):
                     basedir = os.path.dirname(filename)
                     include_files = glob.glob(os.path.join(basedir, node.args))
                     for path in include_files:
-                        sub_node = Node('#subnode')
-                        sub_node.read_file(path)
-                        self.content.extend(sub_node.content)
+                        sub_node = Node(path)
+                        self.extend(sub_node)
+                        #self.content.extend(sub_node.content)
 
 
     def write_file(self, filename):
@@ -211,14 +200,17 @@ class Node(object):
         if self.content:
             for d in self.content:
                 if d.is_open():
-                    fh.write('\n')
+                    # fh.write('\n')
                     fh.write(self.prefix*depth + d.get_opentag() + '\n')
                     # print "# dump", d.section, "depth", newdepth
                     d.dump(fh, newdepth)
                     fh.write(self.prefix*depth + d.get_closetag() + '\n\n')
                 else:
-                    args = d.args or ''
-                    fh.write(self.prefix*depth + str(d) + ' ' + args + '\n')
+                    if d.cmd:
+                        args = d.args or ''
+                        fh.write(self.prefix*depth + str(d) + ' ' + args + '\n')
+                    else:
+                        fh.write(self.prefix*depth + d.raw + '\n')
         else:
             # print self.raw # NOCONTENT
             pass
@@ -229,4 +221,7 @@ class Node(object):
         else:
             return self.raw
 
+    def delete(self):
+        """ Delete myself from parent content """
+        self.parent.content.remove(self)
 

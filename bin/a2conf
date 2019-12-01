@@ -4,6 +4,32 @@ import argparse
 import a2conf
 import logging
 import sys
+import re
+
+def vhost_filter(vhost, fltr):
+    # skip or process? (--filter option)
+    if fltr is None:
+        # No filter, any vhost passes
+        return True
+
+    for filter_cmd in fltr[0].split(','):
+        for check_node in vhost.children(filter_cmd):
+            log.debug("Check node {}".format(check_node))
+            if len(fltr) == 1:
+                # No args check, just accept
+                return True
+
+            missing_value = False
+            for option in fltr[1:]:
+                if option.lower() not in map(str.lower, check_node.args.split(' ')):
+                    log.debug("Missing option {!r}".format(option))
+                    missing_value = True
+            if not missing_value:
+                # all values found
+                return True
+    return False
+
+
 
 def_file = '/etc/apache2/apache2.conf'
 
@@ -11,8 +37,8 @@ parser = argparse.ArgumentParser(description='Apache config parser')
 parser.add_argument(dest='file', nargs='?', default=def_file, metavar='PATH',
                     help='Config file(s) path (def: {}). Either filename or directory'.format(def_file))
 parser.add_argument('--cmd', default=list(), nargs='*', help='show all these commands', type=str.lower)
-parser.add_argument('--filter', nargs=2, metavar=('Command', 'Argument'),
-                    help='Process only sections with this command/argument (command can be "ServerName,ServerList")',
+parser.add_argument('--filter', nargs='+', metavar=('Command', 'Argument'),
+                    help='Process only sections with this command/argument ()',
                     type=str.lower)
 parser.add_argument('--negative', default=False, action='store_true', help='Negative filtering')
 parser.add_argument('--args', default=False, action='store_true', help='show only arguments')
@@ -21,6 +47,8 @@ parser.add_argument('--vhost', default=None, nargs='?', const='', help='VHOST fo
 parser.add_argument('-v', '--verbose', default=False, action='store_true', help='verbose')
 parser.add_argument('--no-includes', default=True, dest='includes', action='store_false',
                     help='Disable processing Include* directives')
+parser.add_argument('--undef', default='[NOT FOUND]',
+                    help='text displayed in --vhost output if key is not found. Or magic word "_skip"')
 
 
 args = parser.parse_args()
@@ -43,59 +71,49 @@ if not args.file:
     exit()
 
 # read file
-root = a2conf.Node(name='#root', includes=args.includes)
-parent = root
-
-root.read_file(args.file)
+root = a2conf.Node(read=args.file, includes=args.includes)
 
 arg_list = list()
+for vhost in root.children('<VirtualHost>'):
 
-for vhost in root.all_nodes():
-    if vhost.section and vhost.section.lower() == 'virtualhost':
+    if vhost_filter(vhost, args.filter) == args.negative:
+        log.debug('skipping vhost because not matched filter')
+        continue
 
-        # skip or process?
-        if args.filter:
-            process = False
-            for check_node in vhost.get_nodes_cmd(args.filter[0].split(',')):
-                check_args = check_node.args.split(' ')
-                if args.filter[1].lower() in map(str.lower, check_args):
-                    process = True
+    ctx = dict()
+    ctx['vhostargs'] = vhost.args
 
-            if args.negative:
-                process = not process
+    if args.vhost is not None:
+        # reset arglist if we use per-vhost output
+        arg_list = list()
 
-            if not process:
-                log.debug("Skipping VHost: {}".format(vhost))
-                continue
-            else:
-                log.debug("Process VHost: {}".format(vhost))
+    # now process all statements inside vhost
+    for cnode in vhost.children():
+        # f
+        if cnode.cmd:
+            ctx[cnode.cmd.lower()] = cnode.args
 
-        ctx = dict()
-        ctx['vhostargs'] = vhost.args
+            if args.cmd:
+                if cnode.cmd.lower() in args.cmd:
+                    if args.args or args.uargs:
+                        # process only args
+                        arg_list.extend(filter(None, cnode.args.split(" ")))
+                    else:
+                        print(cnode.cmd, cnode.args)
 
-        if args.vhost is not None:
-            # reset arglist if we use per-vhost output
-            arg_list = list()
+    ctx['args'] = ' '.join(arg_list)
+    ctx['uargs'] = ' '.join(set(arg_list))
 
-        # now process all statements inside vhost
-        for cnode in vhost.children():
-            # f
-            if cnode.cmd:
-                ctx[cnode.cmd.lower()] = cnode.args
-
-                if args.cmd:
-                    if cnode.cmd.lower() in args.cmd:
-                        if args.args or args.uargs:
-                            # process only args
-                            arg_list.extend(filter(None, cnode.args.split(" ")))
-                        else:
-                            print(cnode.cmd, cnode.args)
-
-        ctx['args'] = ' '.join(arg_list)
-        ctx['uargs'] = ' '.join(set(arg_list))
-
-        if args.vhost is not None:
-            # per-vhost
+    if args.vhost is not None:
+        skip = False
+        # fix ctx, add missing keys
+        for m in re.finditer('{([^\}]+)}',args.vhost):
+            if not m.group(1) in ctx:
+                if args.undef == '_skip':
+                    log.debug('Skip because {} not found in vhost data'.format(m.group(1)))
+                    skip = True
+                ctx[m.group(1)] = args.undef
+        if not skip:
             log.debug(ctx)
             print(args.vhost.format(**ctx))
 

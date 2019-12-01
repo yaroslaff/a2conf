@@ -39,7 +39,6 @@ def setup_module(module):
     global confdir
     global files
     confdir = mkdtemp(prefix='a2conf-test-', dir='/tmp')
-    print("confdir:", confdir)
 
     for codename, content in examples.items():
         files[codename] = os.path.join(confdir, codename+'.conf')
@@ -49,7 +48,6 @@ def setup_module(module):
 
 
 def teardown_module(module):
-    print("TEARDOWN", confdir)
     for codename, path in files.items():
         os.unlink(path)
 
@@ -60,8 +58,7 @@ class TestClass:
     def test_children(self):
         print(123)
         assert(1==1)
-        root = a2conf.Node(name='#root')
-        root.read_file(files['c1'])
+        root = a2conf.Node(files['c1'])
         assert(len(list(root.children('<VirtualHost>'))) == 1)
 
         vh = list(root.children('<VirtualHost>'))[0]
@@ -86,15 +83,40 @@ class TestClass:
 
     def test_include(self):
         # with disabled recursion len = 1
-        root = a2conf.Node(name='#root', includes=False)
-        root.read_file(files['include'])
+        root = a2conf.Node(files['include'], includes=False)
         assert(len(list(root.children(recursive=True))) == 1)
 
-        root = a2conf.Node(name='#root')
-        root.read_file(files['include'])
+        root = a2conf.Node(files['include'])
         assert(len(list(root.children(recursive=True)))> 1)
 
     def test_include_glob(self):
-        root = a2conf.Node(name='#root')
-        root.read_file(files['include_glob'])
+        root = a2conf.Node(files['include_glob'])
         assert(len(list(root.children(recursive=True))) > 1)
+
+    def test_replace(self):
+        root = a2conf.Node(files['c1'])
+
+        ssl = next(root.children('SSLEngine', recursive=True))
+        ssl.args = 'off'
+
+        ssl = next(root.children('SSLEngine', recursive=True))
+        assert(ssl.args == 'off')
+
+    def test_first(self):
+        root = a2conf.Node(files['c1'])
+
+        name1 = next(root.children('servername', recursive=True))
+        name2 = next(root.children('servername', recursive=True))
+        name3 = root.first('servername', recursive=True)
+
+        assert(name1 == name2)
+        assert(name2 == name3)
+
+    def test_delete(self):
+        root = a2conf.Node(files['c1'])
+
+        ssl = root.first('SSLEngine', recursive=True)
+        ssl.delete()
+
+        assert(root.first('SSLEngine', recursive=True) is None)
+

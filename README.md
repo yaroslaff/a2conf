@@ -29,7 +29,7 @@ $ bin/a2conf examples/example.conf --cmd ServerName ServerAlias --uargs
 secure.example.com 1.example.com www.example.com example.com 2.example.com
 ~~~
 
-Filtering sections
+Filtering:
 ~~~
 # Only SSL hosts. Note: secure.example.com listed
 $ bin/a2conf examples/example.conf --cmd ServerName ServerAlias --uargs --filter sslengine on
@@ -45,6 +45,14 @@ Per-vhost info
 $ bin/a2conf examples/example.conf  --cmd servername serveralias --uargs --vhost '{vhostargs} {args}'
 *:80 example.com www.example.com example.com 1.example.com 2.example.com
 *:443 example.com www.example.com 1.example.com 2.example.com secure.example.com
+
+# What certfile we use for secure.example.com ?
+bin/a2conf examples/example.conf --vhost '{servername} {sslcertificatefile}' --filter ServerName,ServerAlias secure.example.com
+example.com /etc/letsencrypt/live/example.com/fullchain.pem
+
+# What certfile we use for 1.example.com (more good-style error-prone approach) ?
+$ bin/a2conf examples/example.conf --vhost '{servername} {sslcertificatefile}' --filter ServerName,ServerAlias 1.example.com  --undef _skip
+example.com /etc/letsencrypt/live/example.com/fullchain.pem
 ~~~
 
 List ServerName and DocumentRoot for each virtualhost with SSL
@@ -70,15 +78,27 @@ You can get list of all available tokens for `--vhost` option in verbose mode (`
 **name** - name of node. cmd if node has cmd, or section name (in brackets) if this is section. e.g. 'ServerName' or
 '<VirtualHost>'
 
-### Structure
-For container sections (VirtualHost) attr `content` is list of children. For usual commands (e.g. ServerName) - empty list.
+**content** - list of child nodes (possible empty). For container sections (VirtualHost) attribute `content` is list
+ of children. For usual commands (e.g. ServerName) - empty list.
 
-**content** - list of child nodes (possible empty)
 
-**children(name=None, recursive=None)** - return generator for all children  nodes (e.g. for VirtualHost node). Generator is empty if no
+### Methods
+
+**_init__(self, read=filename, raw=None, parent=None, name=None, path=None, line=None, includes=True)** - In most cases you should not need to use
+any parameters here except `includes` and `read`. `read` is apache config filename to read. Use `includes=False` if you want `read_file` method to ignore `Include*` directives.
+
+**children(name=None, recursive=None)** - Main query method, returns generator for all children  nodes (e.g. for VirtualHost node). Generator is empty if no
 children. If name specified, generator will return only nodes with this name (e.g. 'servername' or '<VirtualHost>'). If recursive is On,
 generator will return nested nodes too (e.g. what is inside `<IfModule>` or `<Directory>` settings). To get just one first element use
 `next(node.children('ServerName'))`. It will raise `StopIteration` if node has no such children elements.
+
+**first(name, recursive=None)** - wrapper for children(). Returns only first element or None. Not raising exceptions.
+
+**read_file(filename)** - Reads apache config. Called automatically from `__init__` if you specified `read` argument.
+
+**dump(fh=sys.stdout, depth=0):** - dump loaded config in unified format (indented). if fh not specified, just dumps to stdout()
+
+**write_file(filename)** - opens file for writing and dump() to this file.
 
 ## Examples
 
@@ -88,8 +108,7 @@ generator will return nested nodes too (e.g. what is inside `<IfModule>` or `<Di
 #!/usr/bin/env python3
 import sys
 import a2conf
-root = a2conf.Node(name='#root')
-root.read_file(sys.argv[1])
+root = a2conf.Node(sys.argv[1])
 def recdump(node, prefix=""):
     if node.section:
         print(prefix, "SECTION", node.section, "ARGS", node.args, "CONTENT", len(node.content))
@@ -127,12 +146,13 @@ $ examples/ex1_dump.py examples/example.conf
 #!/usr/bin/env python3
 import sys
 import a2conf
-root = a2conf.Node(name='#root')
-root.read_file(sys.argv[1])
+root = a2conf.Node(sys.argv[1])
+
 for vhost in root.children('<VirtualHost>'):
-    servername = next(vhost.children('servername')).args
+    servername = vhost.first('servername').args # One query method, via first(). Not much fail-safe but short.
+
     try:
-        ssl_option = next(vhost.children('sslengine')).args
+        ssl_option = next(vhost.children('sslengine')).args # Other query method, via children()
         if ssl_option.lower() == 'on':
             print("{} has SSL enabled".format(servername))
     except StopIteration:
@@ -145,3 +165,78 @@ Output:
 $ examples/ex2_query.py examples/example.conf
 example.com has SSL enabled
 ~~~
+
+### Replace values
+`examples/ex3_replace.py` disables SSLEngine directive:
+~~~
+#!/usr/bin/env python3
+import sys
+import a2conf
+root = a2conf.Node(sys.argv[1])
+for ssl in root.children('SSLEngine', recursive=True):
+    ssl.args = "Off"
+root.dump()
+~~~
+
+<details>
+<summary>Output:</summary>
+~~~
+$ examples/ex3_replace.py examples/example.conf
+# asdf
+<VirtualHost *:80>
+    # zzzz
+    DocumentRoot /var/www/example
+    ServerName example.com
+    ServerAlias www.example.com example.com 1.example.com 2.example.com
+    DirectoryIndex index.html index.htm default.htm index.php
+    Options -Indexes +FollowSymLinks
+</VirtualHost>
+
+<VirtualHost *:443>
+    DocumentRoot /var/www/example
+    ServerName example.com
+    ServerAlias www.example.com 1.example.com 2.example.com secure.example.com
+    DirectoryIndex index.html index.htm default.htm index.php
+    Options -Indexes +FollowSymLinks
+    SSLEngine Off
+    SSLCertificateFile /etc/letsencrypt/live/example.com/fullchain.pem
+    SSLCertificateKeyFile /etc/letsencrypt/live/example.com/privkey.pem
+    SSLCertificateChainFile /etc/letsencrypt/live/example.com/chain.pem
+</VirtualHost>
+~~~
+</details>
+
+### Delete statements
+`examples/ex4_delete.py` delete vhost without SSLEngine and also delete ServerAlias:
+~~~
+#!/usr/bin/env python3
+import sys
+import a2conf
+root = a2conf.Node(sys.argv[1])
+
+for vhost in root.children('<VirtualHost>'):
+    if vhost.first('sslengine') is None:
+        vhost.delete()
+
+for alias in root.children('ServerAlias', recursive=True):
+    alias.delete()
+root.dump()
+~~~
+
+<details>
+<summary>Output:</summary>
+~~~
+$ examples/ex4_delete.py examples/example.conf
+# asdf
+<VirtualHost *:443>
+    DocumentRoot /var/www/example
+    ServerName example.com
+    DirectoryIndex index.html index.htm default.htm index.php
+    Options -Indexes +FollowSymLinks
+    SSLEngine On
+    SSLCertificateFile /etc/letsencrypt/live/example.com/fullchain.pem
+    SSLCertificateKeyFile /etc/letsencrypt/live/example.com/privkey.pem
+    SSLCertificateChainFile /etc/letsencrypt/live/example.com/chain.pem
+</VirtualHost>
+~~~
+</details>

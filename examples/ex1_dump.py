@@ -1,8 +1,7 @@
 #!/usr/bin/env python3
 import sys
 import a2conf
-root = a2conf.Node(name='#root')
-root.read_file(sys.argv[1])
+root = a2conf.Node(sys.argv[1])
 def recdump(node, prefix=""):
     if node.section:
         print(prefix, "SECTION", node.section, "ARGS", node.args, "CONTENT", len(node.content))
