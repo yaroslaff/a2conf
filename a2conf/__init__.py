@@ -6,7 +6,7 @@ import copy
 import argparse
 
 class Node(object):
-    def __init__(self, raw=None, parent=None, name=None):
+    def __init__(self, raw=None, parent=None, name=None, path=None, line=None):
         self.raw = raw
         self.parent = parent
         self.content = list() # children
@@ -14,6 +14,9 @@ class Node(object):
         self.section = None # Section e.g. "VirtualHost" or None
         self.cmd = None # Command, e.g. "ServerName"
         self.args = None # Args to section (VirtualHost), e.g. "*:80" or
+
+        self.path = path # Filename
+        self.line = line # line in file
 
 
         if name:
@@ -144,12 +147,15 @@ class Node(object):
         root = self
         parent = root
 
+        line = 0
+
         with open(filename) as fh:
             for l in fh.readlines():
+                line += 1
                 l = l.strip()
                 if not l:
                     continue
-                node = Node(l, parent)
+                node = Node(l, parent, path = filename, line = line)
                 if node.is_open():
                     parent.add(node)
                     parent = node

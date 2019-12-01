@@ -120,7 +120,7 @@ def process_file(path, local_ip_list, args):
     for vhost in root.children('<VirtualHost>'):
         servername = next(vhost.children('servername')).args
         report = Report(servername)
-        report.info("Apache config file: {}".format(path))
+        report.info("Apache config file: {}:{}".format(vhost.path, vhost.line))
 
         try:
             sslengine = next(vhost.children('sslengine'))
