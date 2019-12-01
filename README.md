@@ -6,7 +6,7 @@ which is available `examples/example.conf`. Use `export PYTHONPATH=.` to use mod
 # a2conf.py utility
 ## Examples
 Just smart grep
-~~~
+~~~shell
 $ bin/a2conf examples/example.conf --cmd ServerName ServerAlias
 ServerName example.com
 ServerAlias www.example.com example.com 1.example.com 2.example.com
@@ -18,19 +18,19 @@ SSLCertificateFile /etc/letsencrypt/live/example.com/fullchain.pem
 ~~~
 
 Only arguments (one line, space-separated, non-unique):
-~~~
+~~~shell
 $ bin/a2conf examples/example.conf --cmd ServerName ServerAlias --args
 example.com www.example.com example.com 1.example.com 2.example.com example.com www.example.com 1.example.com 2.example.com secure.example.com
 ~~~
 
 Unique arguments:
-~~~
+~~~shell
 $ bin/a2conf examples/example.conf --cmd ServerName ServerAlias --uargs
 secure.example.com 1.example.com www.example.com example.com 2.example.com
 ~~~
 
 Filtering:
-~~~
+~~~shell
 # Only SSL hosts. Note: secure.example.com listed
 $ bin/a2conf examples/example.conf --cmd ServerName ServerAlias --uargs --filter sslengine on
 1.example.com example.com secure.example.com 2.example.com www.example.com
@@ -47,7 +47,7 @@ $ bin/a2conf examples/example.conf  --cmd servername serveralias --uargs --vhost
 *:443 example.com www.example.com 1.example.com 2.example.com secure.example.com
 
 # What certfile we use for secure.example.com ?
-bin/a2conf examples/example.conf --vhost '{servername} {sslcertificatefile}' --filter ServerName,ServerAlias secure.example.com
+$ bin/a2conf examples/example.conf --vhost '{servername} {sslcertificatefile}' --filter ServerName,ServerAlias secure.example.com
 example.com /etc/letsencrypt/live/example.com/fullchain.pem
 
 # What certfile we use for 1.example.com (more good-style error-prone approach) ?
@@ -56,7 +56,7 @@ example.com /etc/letsencrypt/live/example.com/fullchain.pem
 ~~~
 
 List ServerName and DocumentRoot for each virtualhost with SSL
-~~~
+~~~shell
 $ bin/a2conf examples/example.conf --vhost '{servername} {documentroot}' --filter SSLEngine on
 example.com /var/www/example
 ~~~
@@ -206,7 +206,7 @@ root.dump()
 ~~~
 
 Output:
-~~~
+~~~shell
 $ examples/ex3_replace_delete.py examples/example.conf
 # asdf
 <VirtualHost *:80>
