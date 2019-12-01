@@ -160,7 +160,7 @@ Note - this is short example just for demo, it's not very good for production: i
 
 ### Query
 `examples/ex2_query.py` print all SSL sites from config:
-```python3
+```python
 #!/usr/bin/env python3
 import sys
 import a2conf
@@ -186,7 +186,7 @@ example.com has SSL enabled
 
 ### Replace and delete
 `examples/ex3_replace_delete.py` disables SSLEngine directive:
-~~~
+~~~python
 #!/usr/bin/env python3
 import sys
 import a2conf
