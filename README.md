@@ -71,13 +71,14 @@ You can get list of all available tokens for `--vhost` option in verbose mode (`
 '<VirtualHost>'
 
 ### Structure
-For container sections (VirtualHost) attr content is not None. For usual lines (ServerName) content is None
+For container sections (VirtualHost) attr `content` is list of children. For usual commands (e.g. ServerName) - empty list.
 
-**content** - list of child nodes or None
+**content** - list of child nodes (possible empty)
 
 **children(name=None, recursive=None)** - return generator for all children  nodes (e.g. for VirtualHost node). Generator is empty if no
 children. If name specified, generator will return only nodes with this name (e.g. 'servername' or '<VirtualHost>'). If recursive is On,
-generator will return nested nodes too (e.g. what is inside `<IfModule>` or `<Directory>` settings)
+generator will return nested nodes too (e.g. what is inside `<IfModule>` or `<Directory>` settings). To get just one first element use
+`next(node.children('ServerName'))`. It will raise `StopIteration` if node has no such children elements.
 
 ## Examples
 
