@@ -205,9 +205,11 @@ root.dump()
 Output:
 ~~~shell
 $ examples/ex3_replace_delete.py examples/example.conf
-# asdf
+#
+# Example config file for a2conf
+#
 <VirtualHost *:80>
-    # zzzz
+    # Non-ssl site
     DocumentRoot /var/www/example2 # New DocumentRoot!
     ServerName example.com # .... OUR TEST SITE ....
     DirectoryIndex index.html index.htm default.htm index.php
