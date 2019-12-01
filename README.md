@@ -160,13 +160,11 @@ for vhost in root.children('<VirtualHost>'):
         continue
 ```
 
-<details>
-<summary>Output:</summary>
+Output:
 ```
 $ examples/ex2_query.py examples/example.conf
 example.com has SSL enabled
 ```
-</summary>
 
 ### Replace values
 `examples/ex3_replace.py` disables SSLEngine directive:
