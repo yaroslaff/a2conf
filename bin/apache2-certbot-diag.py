@@ -179,7 +179,7 @@ def process_file(path, local_ip_list, args):
         except StopIteration:
             report.problem("No DocumentRoot!")
         else:
-            if os.path.isdir(droot):
+            if droot is not None and os.path.isdir(droot):
                 report.info("DocumentRoot: {}".format(droot))
             else:
                 report.problem("DocumentRoot dir not exists: {} (problem!)".format(droot))
@@ -247,7 +247,8 @@ def process_file(path, local_ip_list, args):
         #
         # Final debug
         #
-        report.report()
+        if report.has_problems() or not args.quiet:
+            report.report()
 
 
 def main():
@@ -258,8 +259,11 @@ def main():
 
     parser = argparse.ArgumentParser(description='Apache2 / Certbot misconfiguration diagnostic')
 
-    parser.add_argument('-v', dest='verbose', action='store_true',
+    parser.add_argument('-v', '--verbose', action='store_true',
                         default=False, help='verbose mode')
+    parser.add_argument('-q', '--quiet', action='store_true',
+                        default=False, help='quiet mode, suppress output for sites without problems')
+
     parser.add_argument('-d', '--dir', default=def_dir, metavar='DIR_PATH',
                         help='Directory with apache virtual sites. def: {}'.format(def_dir))
     parser.add_argument('-f', '--file', default=None, metavar='PATH',
