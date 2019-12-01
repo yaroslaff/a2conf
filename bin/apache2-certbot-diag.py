@@ -214,7 +214,7 @@ def process_file(path, local_ip_list, args):
         #
         # Final check with requests
         #
-        if os.path.isdir(droot):
+        if droot is not None and os.path.isdir(droot):
             test_data = ''.join(random.choice(
                 string.ascii_uppercase + string.ascii_lowercase + string.digits) for _ in range(100))
             test_basename = 'certbot_diag_' + ''.join(random.choice(
