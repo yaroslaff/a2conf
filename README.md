@@ -178,8 +178,7 @@ for ssl in root.children('SSLEngine', recursive=True):
 root.dump()
 ~~~
 
-<details>
-<summary>Output:</summary>
+Output:
 ~~~
 $ examples/ex3_replace.py examples/example.conf
 # asdf
@@ -204,7 +203,6 @@ $ examples/ex3_replace.py examples/example.conf
     SSLCertificateChainFile /etc/letsencrypt/live/example.com/chain.pem
 </VirtualHost>
 ~~~
-</details>
 
 ### Delete statements
 `examples/ex4_delete.py` delete vhost without SSLEngine and also delete ServerAlias:
@@ -223,8 +221,7 @@ for alias in root.children('ServerAlias', recursive=True):
 root.dump()
 ~~~
 
-<details>
-<summary>Output:</summary>
+Output:
 ~~~
 $ examples/ex4_delete.py examples/example.conf
 # asdf
