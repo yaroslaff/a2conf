@@ -92,7 +92,7 @@ children. If name specified, generator will return only nodes with this name (e.
 generator will return nested nodes too (e.g. what is inside `<IfModule>` or `<Directory>` settings). To get just one first element use
 `next(node.children('ServerName'))`. It will raise `StopIteration` if node has no such children elements.
 
-`first(name, recursive=None)` - wrapper for children(). Returns only first element or None. Not raising exceptions.
+`first(name, recursive=None)` - wrapper for `children()`. Returns only first element or `None`. Not raising exceptions.
 
 `read_file(filename)` - Reads apache config. Called automatically from `__init__` if you specified `read` argument.
 
