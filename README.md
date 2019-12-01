@@ -17,7 +17,7 @@ $ bin/a2conf examples/example.conf --cmd SSLCertificateFile
 SSLCertificateFile /etc/letsencrypt/live/example.com/fullchain.pem
 ~~~
 
-Only arguments (one line, space-separated, non-unique):
+Only arguments:
 ~~~shell
 # All arguments (including duplicates)
 $ bin/a2conf examples/example.conf --cmd ServerName ServerAlias --args
