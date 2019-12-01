@@ -209,7 +209,7 @@ class Node(object):
         if self.cmd:
             fh.write("{}{} {} {}\n".format(self.prefix*depth, self.cmd, self.args, self.suffix))
         elif self.section:
-            #
+            # last section element should have depth-1
             if self.section.startswith('/'):
                 line_depth = depth-1
             else:
@@ -223,35 +223,15 @@ class Node(object):
             if self.children:
                 for d in self.content:
                     d.dump(fh, depth+1)
-
         else:
             # neither cmd, nor section
             if self.suffix:
                 print(self.prefix*depth + self.suffix)
-            # root node
+            # only root node has cmd=None, section=None but has children
             if self.children:
                 for d in self.content:
                     d.dump(fh, depth)
-
         return
-
-        if self.content:
-            for d in self.content:
-                if d.is_open():
-                    # fh.write('\n')
-                    fh.write(self.prefix*depth + d.get_opentag() + '\n')
-                    # print "# dump", d.section, "depth", newdepth
-                    d.dump(fh, newdepth)
-                    fh.write(self.prefix*depth + d.get_closetag() + '\n\n')
-                else:
-                    if d.cmd:
-                        args = d.args or ''
-                        fh.write(self.prefix*depth + str(d) + ' ' + args + self.suffix + '\n')
-                    else:
-                        fh.write(self.prefix*depth + d.raw + '\n')
-        else:
-            # print self.raw # NOCONTENT
-            pass
 
     def __str__(self):
         if self.name is not None:
