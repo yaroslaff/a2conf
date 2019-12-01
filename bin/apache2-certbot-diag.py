@@ -15,8 +15,8 @@ log = None
 class LetsEncryptCertificateConfig:
     def __init__(self, path):
         self.path = path
-        self.readfile(path)
         self.content = dict()
+        self.readfile(path)
 
     def readfile(self, path):
         self.path = path
@@ -47,6 +47,7 @@ class LetsEncryptCertificateConfig:
             return self.content['[[webroot_map]]'].keys()
         except KeyError:
             print("No [[webroot_map]] in {}".format(self.path))
+            raise
 
     def get_droot(self, domain):
         return self.content['[[webroot_map]]'][domain]
