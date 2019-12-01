@@ -5,8 +5,11 @@ import a2conf
 import logging
 import sys
 
+def_file = '/etc/apache2/apache2.conf'
+
 parser = argparse.ArgumentParser(description='Apache config parser')
-parser.add_argument('-i', '--infile', help='input filename', default='/etc/apache2/apache2.conf')
+parser.add_argument(dest='file', nargs='?', default=def_file, metavar='PATH',
+                    help='Config file(s) path (def: {}). Either filename or directory'.format(def_file))
 parser.add_argument('--cmd', default=list(), nargs='*', help='show all these commands', type=str.lower)
 parser.add_argument('--filter', nargs=2, metavar=('Command', 'Argument'),
                     help='Process only sections with this command/argument (command can be "ServerName,ServerList")',
@@ -35,15 +38,15 @@ log.addHandler(logh)
 
 log.debug("DEBUG")
 
-if not args.infile:
-    print("Need -i <filename>")
+if not args.file:
+    print("Need filename")
     exit()
 
 # read file
 root = a2conf.Node(name='#root', includes=args.includes)
 parent = root
 
-root.read_file(args.infile)
+root.read_file(args.file)
 
 arg_list = list()
 

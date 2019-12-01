@@ -170,6 +170,19 @@ def process_file(path, local_ip_list, args):
         if not certfile.startswith(args.ledir):
             report.problem('Certfile {} not in LetsEncrypt dir {}'.format(certfile, args.ledir))
 
+
+        #
+        # Redirect check
+        #
+        try:
+            r = next(vhost.children('Redirect'))
+            rpath = r.args.split(' ')[1]
+            if rpath in ['/', '.well-known']:
+                report.problem('Requests will be redirected: {} {}'.format(r, r.args))
+        except StopIteration:
+            # No redirect, very good!
+            pass
+
         #
         # DocumentRoot check
         #
@@ -256,20 +269,16 @@ def main():
     global log
 
     def_file = '/etc/apache2/apache2.conf'
-    def_dir = None
     def_ledir = '/etc/letsencrypt/'
 
     parser = argparse.ArgumentParser(description='Apache2 / Certbot misconfiguration diagnostic')
 
+    parser.add_argument(dest='file', nargs='?', default=def_file, metavar='PATH',
+                        help='Config file(s) path (def: {}). Either filename or directory'.format(def_file))
     parser.add_argument('-v', '--verbose', action='store_true',
                         default=False, help='verbose mode')
     parser.add_argument('-q', '--quiet', action='store_true',
                         default=False, help='quiet mode, suppress output for sites without problems')
-
-    parser.add_argument('-d', '--dir', default=def_dir, metavar='DIR_PATH',
-                        help='Directory with apache virtual sites. def: {}'.format(def_dir))
-    parser.add_argument('-f', '--file', default=def_file, metavar='PATH',
-                        help='One config file path (def: {})'.format(def_file))
     parser.add_argument('-i', '--ip', nargs='*',
                         help='Default addresses. Autodetect if not specified')
     parser.add_argument('--ledir', default=def_ledir, metavar='LETSENCRYPT_DIR_PATH',
@@ -296,9 +305,9 @@ def main():
         local_ip_list = detect_ip()
     log.debug("my IP list: {}".format(local_ip_list))
 
-    if args.dir:
-        for f in os.listdir(args.dir):
-            path = os.path.join(args.dir, f)
+    if os.path.isdir(args.file):
+        for f in os.listdir(args.file):
+            path = os.path.join(args.file, f)
             if not (os.path.isfile(path) or os.path.islink(path)):
                 continue
             process_file(path, local_ip_list, args)

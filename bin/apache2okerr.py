@@ -51,8 +51,10 @@ def main():
 
     parser = argparse.ArgumentParser(description='Bulk-add Apache2 SSL hosts to Okerr monitoring')
 
-    parser.add_argument('-f', '--file', default=def_file, metavar='PATH',
-                        help='One config file path (def: {})'.format(def_file))
+
+    parser.add_argument(dest='file', nargs='?', default=def_file, metavar='PATH',
+                        help='Config file(s) path (def: {}). Either filename or directory'.format(def_file))
+
     parser.add_argument('-d', '--dir', default=def_dir, metavar='DIR_PATH',
                         help='Process all files files in directory (e.g. /etc/apache2/sites-enabled/). def: None'.format(def_dir))
     parser.add_argument('--prefix', default=def_prefix, metavar='PATH',
@@ -70,15 +72,13 @@ def main():
 
     args = parser.parse_args()
 
-    print("file")
-
-    if args.file:
-        process_file(args.file, args)
-    else:
-        for f in os.listdir(args.dir):
-            path = os.path.join(args.dir, f)
+    if os.path.isdir(args.file):
+        for f in os.listdir(args.file):
+            path = os.path.join(args.file, f)
             if not (os.path.isfile(path) or os.path.islink(path)):
                 continue
             process_file(path, args)
+    else:
+        process_file(args.file, args)
 
 main()
