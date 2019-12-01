@@ -142,7 +142,7 @@ $ examples/ex1_dump.py examples/example.conf
 
 ### Query
 `examples/ex2_query.py` print all SSL sites from config:
-~~~python3
+```python3
 #!/usr/bin/env python3
 import sys
 import a2conf
@@ -158,13 +158,15 @@ for vhost in root.children('<VirtualHost>'):
     except StopIteration:
         # No SSL Engine directive in this vhost
         continue
-~~~
+```
 
-Output:
-~~~
+<details>
+<summary>Output:</summary>
+```
 $ examples/ex2_query.py examples/example.conf
 example.com has SSL enabled
-~~~
+```
+</summary>
 
 ### Replace values
 `examples/ex3_replace.py` disables SSLEngine directive:
