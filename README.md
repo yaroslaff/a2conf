@@ -41,7 +41,7 @@ example.com 2.example.com 1.example.com www.example.com
 ~~~
 
 Per-vhost info
-~~~
+~~~shell
 $ bin/a2conf examples/example.conf  --cmd servername serveralias --uargs --vhost '{vhostargs} {args}'
 *:80 example.com www.example.com example.com 1.example.com 2.example.com
 *:443 example.com www.example.com 1.example.com 2.example.com secure.example.com
@@ -194,10 +194,12 @@ root = a2conf.Node(sys.argv[1])
 
 for vhost in root.children('<VirtualHost>'):
     if vhost.first('sslengine'):
-        vhost.delete()
+        vhost.delete() # Delete SSL vhost
     else:
+        # Modify DocumentRoot
         vhost.first('DocumentRoot').args = '/var/www/example2'
         vhost.first('DocumentRoot').suffix = '# New DocumentRoot!'
+        # Delete ServerAlias
         vhost.first('ServerAlias').delete()
 
 root.dump()
