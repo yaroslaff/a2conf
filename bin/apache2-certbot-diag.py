@@ -9,12 +9,14 @@ import socket
 import random
 import string
 
-# import apache2conf
+log = None
 
-class LetsEncryptCertificateConfig():
+
+class LetsEncryptCertificateConfig:
     def __init__(self, path):
         self.path = path
         self.readfile(path)
+        self.content = dict()
 
     def readfile(self, path):
         self.content = dict()
@@ -37,6 +39,7 @@ class LetsEncryptCertificateConfig():
                     k = k.strip()
                     v = v.strip()
                     self.content[section][k] = v
+
     @property
     def domains(self):
         return self.content['[[webroot_map]]'].keys()
@@ -47,12 +50,13 @@ class LetsEncryptCertificateConfig():
     def dump(self):
         print(self.content)
 
-class Report():
+
+class Report:
     def __init__(self, name):
         self.name = name
         self._info = list()
         self._problem = list()
-        self.prefix = ' '*4;
+        self.prefix = ' ' * 4
 
     def info(self, msg):
         self._info.append(msg)
@@ -83,8 +87,8 @@ class Report():
 
 
 def detect_ip():
-     ip = requests.get('http://ifconfig.me/')
-     return [ '127.0.0.1', ip.text ]
+    ip = requests.get('http://ifconfig.me/')
+    return ['127.0.0.1', ip.text]
 
 
 def resolve(name):
@@ -93,14 +97,10 @@ def resolve(name):
     :param name:
     :return:
     """
-    #try:
     data = socket.gethostbyname_ex(name)
-    # print(data)
     return data[2]
-        #ipx = repr(data[2])
-        #return ipx
-    #except socket.gaierror:
-    #    return list()
+    # except socket.gaierror:
+
 
 def process_file(path, local_ip_list, args):
     log.debug("processing " + path)
@@ -109,11 +109,10 @@ def process_file(path, local_ip_list, args):
 
     lc = None
 
-    for vhost in root.children(cmd='<VirtualHost>'):
+    for vhost in root.children('<VirtualHost>'):
         servername = next(vhost.children('servername')).args
         report = Report(servername)
 
-        problem = False
         try:
             sslengine = next(vhost.children('sslengine'))
         except StopIteration:
@@ -122,7 +121,6 @@ def process_file(path, local_ip_list, args):
         if sslengine.args != 'on':
             log.debug("Skip {} because sslengine args are: {}".format(vhost, repr(sslengine.args)))
             continue
-
 
         #
         # DNS names check
@@ -148,7 +146,6 @@ def process_file(path, local_ip_list, args):
 
             if non_local:
                 names_failed += 1
-                problem = True
             else:
                 names_ok += 1
 
@@ -168,6 +165,7 @@ def process_file(path, local_ip_list, args):
         # DocumentRoot check
         #
 
+        droot = None
         try:
             droot = next(vhost.children('DocumentRoot')).args
         except StopIteration:
@@ -183,8 +181,8 @@ def process_file(path, local_ip_list, args):
         cert_name = cert_relpath[1]
         report.info("Certificate name: " + cert_name)
 
-        leconf = os.path.join(args.ledir,'renewal', cert_name + '.conf')
-        report.info("LetsEncrypt conf file: " + leconf )
+        leconf = os.path.join(args.ledir, 'renewal', cert_name + '.conf')
+        report.info("LetsEncrypt conf file: " + leconf)
         if os.path.exists(leconf):
             lc = LetsEncryptCertificateConfig(leconf)
         else:
@@ -205,13 +203,14 @@ def process_file(path, local_ip_list, args):
         else:
             report.problem("skipped domain/docroot checks because no letsencrypt config")
 
-
         #
         # Final check with requests
         #
         if os.path.isdir(droot):
-            test_data = ''.join(random.choice(string.ascii_uppercase + string.ascii_lowercase + string.digits) for _ in range(100))
-            test_basename = 'certbot_diag_' + ''.join(random.choice(string.ascii_uppercase + string.ascii_lowercase + string.digits) for _ in range(10))
+            test_data = ''.join(random.choice(
+                string.ascii_uppercase + string.ascii_lowercase + string.digits) for _ in range(100))
+            test_basename = 'certbot_diag_' + ''.join(random.choice(
+                string.ascii_uppercase + string.ascii_lowercase + string.digits) for _ in range(10))
             test_dir = os.path.join(droot, '.well-known', 'acme-challenge')
             test_file = os.path.join(test_dir, test_basename)
             report.info("Test file path: " + test_file)
@@ -226,7 +225,8 @@ def process_file(path, local_ip_list, args):
             log.debug('test URL '+test_url)
             r = requests.get(test_url, allow_redirects=True)
             if r.status_code != 200:
-                report.problem('URL {} got status code {}. Maybe Alias or RewriteRule working?'.format(test_url, r.status_code))
+                report.problem('URL {} got status code {}. Maybe Alias or RewriteRule working?'.format(
+                    test_url, r.status_code))
 
             if r.text == test_data:
                 report.info("test data matches")
@@ -240,6 +240,7 @@ def process_file(path, local_ip_list, args):
         # Final debug
         #
         report.report()
+
 
 def main():
     global log
@@ -263,9 +264,9 @@ def main():
     args = parser.parse_args()
 
     logging.basicConfig(
-        #format='%(asctime)s %(message)s',
+        # format='%(asctime)s %(message)s',
         format='%(message)s',
-        #datefmt='%Y-%m-%d %H:%M:%S',
+        # datefmt='%Y-%m-%d %H:%M:%S',
         level=logging.INFO)
 
     log = logging.getLogger('diag')

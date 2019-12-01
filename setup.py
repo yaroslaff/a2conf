@@ -9,7 +9,7 @@ def read(fname):
 
 setup(
     name='a2conf',
-    version='0.1.4',
+    version='0.1.5',
     packages=['a2conf'],
     scripts=[ 'bin/a2conf', 'bin/apache2okerr.py', 'bin/apache2-certbot-diag.py' ],
 
@@ -22,6 +22,7 @@ setup(
     long_description_content_type='text/markdown',
     author_email='yaroslaff@gmail.com',
     description='apache2 configuration file parser and query tool',
+    install_requires=['requests'],
 
     python_requires='>=3',
     classifiers=[
@@ -36,5 +37,5 @@ setup(
         # Specify the Python versions you support here. In particular, ensure
         # that you indicate whether you support Python 2, Python 3 or both.
 #        'Programming Language :: Python :: 3.4',
-    ],
+    ]
 )
