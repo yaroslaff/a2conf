@@ -155,7 +155,7 @@ $ examples/ex1_dump.py examples/example.conf
 }
 ~~~
 Note - this is short example just for demo, it's not very good for production: if virtualhost has more then one directive
-(e.g. ServerAlias, RewriteRule, RewriteCond), only last one will be used)
+(e.g. `ServerAlias`, `RewriteRule`, `RewriteCond`), only last one will be used.
 
 
 ### Query
