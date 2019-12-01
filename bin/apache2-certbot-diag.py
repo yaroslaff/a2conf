@@ -120,6 +120,7 @@ def process_file(path, local_ip_list, args):
     for vhost in root.children('<VirtualHost>'):
         servername = next(vhost.children('servername')).args
         report = Report(servername)
+        report.info("Apache config file: {}".format(path))
 
         try:
             sslengine = next(vhost.children('sslengine'))
@@ -207,7 +208,7 @@ def process_file(path, local_ip_list, args):
                         report.info('DocRoot mismatch for {}. Site: {} Domain: {}'.format(domain, droot, ddroot))
 
                 else:
-                    report.problem('domain {} not in virthost names'.format(domain))
+                    report.problem('domain {} (from LetsEncrypt config) not found among this VirtualHost names'.format(domain))
         else:
             report.problem("skipped domain/docroot checks because no letsencrypt config")
 
