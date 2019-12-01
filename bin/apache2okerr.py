@@ -51,7 +51,7 @@ def main():
 
     parser = argparse.ArgumentParser(description='Bulk-add Apache2 SSL hosts to Okerr monitoring')
 
-    parser.add_argument('-f', '--file', default=None, metavar='PATH',
+    parser.add_argument('-f', '--file', default=def_file, metavar='PATH',
                         help='One config file path (def: {})'.format(def_file))
     parser.add_argument('-d', '--dir', default=def_dir, metavar='DIR_PATH',
                         help='Process all files files in directory (e.g. /etc/apache2/sites-enabled/). def: None'.format(def_dir))
@@ -69,6 +69,8 @@ def main():
                         help='Disable processing Include* directives')
 
     args = parser.parse_args()
+
+    print("file")
 
     if args.file:
         process_file(args.file, args)
