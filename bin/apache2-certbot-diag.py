@@ -19,6 +19,7 @@ class LetsEncryptCertificateConfig:
         self.content = dict()
 
     def readfile(self, path):
+        self.path = path
         self.content = dict()
         self.content[''] = dict()
         section = ''
@@ -42,7 +43,10 @@ class LetsEncryptCertificateConfig:
 
     @property
     def domains(self):
-        return self.content['[[webroot_map]]'].keys()
+        try:
+            return self.content['[[webroot_map]]'].keys()
+        except KeyError:
+            print("No [[webroot_map]] in {}".format(path))
 
     def get_droot(self, domain):
         return self.content['[[webroot_map]]'][domain]
