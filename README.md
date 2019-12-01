@@ -103,42 +103,60 @@ generator will return nested nodes too (e.g. what is inside `<IfModule>` or `<Di
 ## Examples
 
 ### Just dump apache config
-`examples/ex1_dump.py` just loads config and dumps its structure:
+`examples/ex1_dump.py` just loads config and dumps its structure (without comments) as JSON:
 ~~~
 #!/usr/bin/env python3
 import sys
 import a2conf
+import json
+
 root = a2conf.Node(sys.argv[1])
-def recdump(node, prefix=""):
-    if node.section:
-        print(prefix, "SECTION", node.section, "ARGS", node.args, "CONTENT", len(node.content))
-    elif node.cmd:
-            print(prefix, repr(node.cmd), repr(node.args))
+
+def section_dump(node):
+    data = dict()
+
     for ch in node.children():
-        recdump(ch, prefix+"  ")
-recdump(root)
+        if ch.section and not ch.section.startswith('/'):
+            if ch.args:
+                key = ch.section + ' ' + ch.args
+            else:
+                key = ch.section
+            data[key] = section_dump(ch)
+        elif ch.cmd:
+            data[ch.cmd] = ch.args
+    return data
+
+data = section_dump(root)
+print(json.dumps(data, indent=4))
 ~~~
 
 Output:
 ~~~
 $ examples/ex1_dump.py examples/example.conf
-   SECTION VirtualHost ARGS *:80 CONTENT 6
-     'DocumentRoot' '/var/www/example'
-     'ServerName' 'example.com'
-     'ServerAlias' 'www.example.com example.com 1.example.com 2.example.com'
-     'DirectoryIndex' 'index.html index.htm default.htm index.php'
-     'Options' '-Indexes +FollowSymLinks'
-   SECTION VirtualHost ARGS *:443 CONTENT 9
-     'DocumentRoot' '/var/www/example'
-     'ServerName' 'example.com'
-     'ServerAlias' 'www.example.com 1.example.com 2.example.com secure.example.com'
-     'DirectoryIndex' 'index.html index.htm default.htm index.php'
-     'Options' '-Indexes +FollowSymLinks'
-     'SSLEngine' 'On'
-     'SSLCertificateFile' '/etc/letsencrypt/live/example.com/fullchain.pem'
-     'SSLCertificateKeyFile' '/etc/letsencrypt/live/example.com/privkey.pem'
-     'SSLCertificateChainFile' '/etc/letsencrypt/live/example.com/chain.pem'
+{
+    "VirtualHost *:80": {
+        "DocumentRoot": "/var/www/example",
+        "ServerName": "example.com",
+        "ServerAlias": "www.example.com example.com 1.example.com 2.example.com",
+        "DirectoryIndex": "index.html index.htm default.htm index.php",
+        "Options": "-Indexes +FollowSymLinks"
+    },
+    "VirtualHost *:443": {
+        "DocumentRoot": "/var/www/example",
+        "ServerName": "example.com",
+        "ServerAlias": "www.example.com 1.example.com 2.example.com secure.example.com",
+        "DirectoryIndex": "index.html index.htm default.htm index.php",
+        "Options": "-Indexes +FollowSymLinks",
+        "SSLEngine": "On",
+        "SSLCertificateFile": "/etc/letsencrypt/live/example.com/fullchain.pem",
+        "SSLCertificateKeyFile": "/etc/letsencrypt/live/example.com/privkey.pem",
+        "SSLCertificateChainFile": "/etc/letsencrypt/live/example.com/chain.pem"
+    }
+}
 ~~~
+Note - this is short example just for demo, it's not very good for production: if virtualhost has more then one directive
+(e.g. ServerAlias, RewriteRule, RewriteCond), only last one will be used)
+
 
 ### Query
 `examples/ex2_query.py` print all SSL sites from config:

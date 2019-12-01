@@ -1,12 +1,23 @@
 #!/usr/bin/env python3
 import sys
 import a2conf
+import json
+
 root = a2conf.Node(sys.argv[1])
-def recdump(node, prefix=""):
-    if node.section:
-        print(prefix, "SECTION", node.section, "ARGS", node.args, "CONTENT", len(node.content))
-    elif node.cmd:
-            print(prefix, repr(node.cmd), repr(node.args))
+
+def section_dump(node):
+    data = dict()
+
     for ch in node.children():
-        recdump(ch, prefix+"  ")
-recdump(root)
+        if ch.section and not ch.section.startswith('/'):
+            if ch.args:
+                key = ch.section + ' ' + ch.args
+            else:
+                key = ch.section
+            data[key] = section_dump(ch)
+        elif ch.cmd:
+            data[ch.cmd] = ch.args
+    return data
+
+data = section_dump(root)
+print(json.dumps(data, indent=4))
