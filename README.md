@@ -104,7 +104,7 @@ generator will return nested nodes too (e.g. what is inside `<IfModule>` or `<Di
 
 ### Just dump apache config
 `examples/ex1_dump.py` just loads config and dumps its structure (without comments) as JSON:
-~~~
+~~~python
 #!/usr/bin/env python3
 import sys
 import a2conf
