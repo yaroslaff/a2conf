@@ -84,7 +84,7 @@ You can get list of all available tokens for `--vhost` option in verbose mode (`
 
 ### Methods
 
-**_init__(self, read=filename, raw=None, parent=None, name=None, path=None, line=None, includes=True)** - In most cases you should not need to use
+`__init__(self, read=filename, raw=None, parent=None, name=None, path=None, line=None, includes=True)` - In most cases you should not need to use
 any parameters here except `includes` and `read`. `read` is apache config filename to read. Use `includes=False` if you want `read_file` method to ignore `Include*` directives.
 
 **children(name=None, recursive=None)** - Main query method, returns generator for all children  nodes (e.g. for VirtualHost node). Generator is empty if no
