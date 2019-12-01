@@ -47,7 +47,13 @@ $ bin/a2conf -i examples/example.conf  --cmd servername serveralias --uargs --vh
 *:443 example.com www.example.com 1.example.com 2.example.com secure.example.com
 ~~~
 
-You can get list of all available tokens in verbose mode (`-v` option).
+List ServerName and DocumentRoot for each virtualhost with SSL
+~~~
+$ bin/a2conf --vhost '{servername} {documentroot}' --filter SSLEngine on -i examples/example.conf
+example.com /var/www/example
+~~~
+
+You can get list of all available tokens for `--vhost` option in verbose mode (`-v` option).
 
 # Node class
 
@@ -72,9 +78,6 @@ For container sections (VirtualHost) attr content is not None. For usual lines (
 **children(name=None, recursive=None)** - return generator for all children  nodes (e.g. for VirtualHost node). Generator is empty if no
 children. If name specified, generator will return only nodes with this name (e.g. 'servername' or '<VirtualHost>'). If recursive is On,
 generator will return nested nodes too (e.g. what is inside `<IfModule>` or `<Directory>` settings)
-
-## Limitations
-Any 'Include*' directives are not supported for now.
 
 ## Examples
 

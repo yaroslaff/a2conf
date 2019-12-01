@@ -7,7 +7,10 @@ confdir = None
 files = dict()
 
 examples = {
-'c1': """<VirtualHost *:80  *:443>
+'c1': """
+# Test VirtualHost
+
+<VirtualHost *:80  *:443>
     ServerAdmin postmaster@example.com
     ServerName example.com
     ServerAlias www.example.com example.example.com
@@ -25,7 +28,9 @@ examples = {
         SSLCertificateChainFile /etc/letsencrypt/live/example.com/chain.pem
     </IfModule mod_ssl.c>
 </VirtualHost>
-"""
+""",
+'include': 'Include {confdir}/c1.conf',
+'include_glob': 'Include {confdir}/c*.conf'
 }
 
 
@@ -40,7 +45,7 @@ def setup_module(module):
         files[codename] = os.path.join(confdir, codename+'.conf')
 
         with open(files[codename], "w") as f:
-            f.write(content)
+            f.write(content.format(confdir=confdir))
 
 
 def teardown_module(module):
@@ -78,3 +83,18 @@ class TestClass:
 
         # should not found because not recursive
         assert(len(list(vh.children('sslengine', recursive=True ))) == 1)
+
+    def test_include(self):
+        # with disabled recursion len = 1
+        root = a2conf.Node(name='#root', includes=False)
+        root.read_file(files['include'])
+        assert(len(list(root.children(recursive=True))) == 1)
+
+        root = a2conf.Node(name='#root')
+        root.read_file(files['include'])
+        assert(len(list(root.children(recursive=True)))> 1)
+
+    def test_include_glob(self):
+        root = a2conf.Node(name='#root')
+        root.read_file(files['include_glob'])
+        assert(len(list(root.children(recursive=True))) > 1)

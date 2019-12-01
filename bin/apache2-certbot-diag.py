@@ -255,7 +255,8 @@ def process_file(path, local_ip_list, args):
 def main():
     global log
 
-    def_dir = '/etc/apache2/sites-enabled/'
+    def_file = '/etc/apache2/apache2.conf'
+    def_dir = None
     def_ledir = '/etc/letsencrypt/'
 
     parser = argparse.ArgumentParser(description='Apache2 / Certbot misconfiguration diagnostic')
@@ -267,8 +268,8 @@ def main():
 
     parser.add_argument('-d', '--dir', default=def_dir, metavar='DIR_PATH',
                         help='Directory with apache virtual sites. def: {}'.format(def_dir))
-    parser.add_argument('-f', '--file', default=None, metavar='PATH',
-                        help='One config file path')
+    parser.add_argument('-f', '--file', default=def_file, metavar='PATH',
+                        help='One config file path (def: {})'.format(def_file))
     parser.add_argument('-i', '--ip', nargs='*',
                         help='Default addresses. Autodetect if not specified')
     parser.add_argument('--ledir', default=def_ledir, metavar='LETSENCRYPT_DIR_PATH',
@@ -295,14 +296,14 @@ def main():
         local_ip_list = detect_ip()
     log.debug("my IP list: {}".format(local_ip_list))
 
-    if args.file:
-        process_file(args.file, local_ip_list, args)
-    else:
+    if args.dir:
         for f in os.listdir(args.dir):
             path = os.path.join(args.dir, f)
             if not (os.path.isfile(path) or os.path.islink(path)):
                 continue
             process_file(path, local_ip_list, args)
+    else:
+        process_file(args.file, local_ip_list, args)
 
 
 main()

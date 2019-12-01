@@ -2,11 +2,11 @@
 
 import re
 import sys
-import copy
-import argparse
+import os
+import glob
 
 class Node(object):
-    def __init__(self, raw=None, parent=None, name=None, path=None, line=None):
+    def __init__(self, raw=None, parent=None, name=None, path=None, line=None, includes=True):
         self.raw = raw
         self.parent = parent
         self.content = list() # children
@@ -14,6 +14,7 @@ class Node(object):
         self.section = None # Section e.g. "VirtualHost" or None
         self.cmd = None # Command, e.g. "ServerName"
         self.args = None # Args to section (VirtualHost), e.g. "*:80" or
+        self.includes = includes
 
         self.path = path # Filename
         self.line = line # line in file
@@ -106,12 +107,14 @@ class Node(object):
                     # filter by cmd/section
                     if c.name.lower() == name.lower():
                         yield c
-                    if recursive and c.content:
-                        for subc in c.children(name=name, recursive=recursive):
-                            yield subc
                 else:
                     # print "YIELD", c, repr(c.raw), c.name
                     yield c
+
+                if recursive and c.content:
+                    for subc in c.children(name=name, recursive=recursive):
+                        yield subc
+
 
     def all_nodes(self):
         ret = list()
@@ -143,6 +146,7 @@ class Node(object):
             self.content.append(c)
 
     def read_file(self, filename):
+
         # read file
         root = self
         parent = root
@@ -156,6 +160,7 @@ class Node(object):
                 if not l:
                     continue
                 node = Node(l, parent, path = filename, line = line)
+
                 if node.is_open():
                     parent.add(node)
                     parent = node
@@ -164,6 +169,15 @@ class Node(object):
                     # parent.add(node)
                 else:
                     parent.add(node)
+
+                if self.includes and node.name.lower() in ['include', 'includeoptional']:
+                    basedir = os.path.dirname(filename)
+                    include_files = glob.glob(os.path.join(basedir, node.args))
+                    for path in include_files:
+                        sub_node = Node('#subnode')
+                        sub_node.read_file(path)
+                        self.content.extend(sub_node.content)
+
 
     def write_file(self, filename):
         if filename != '-':        
@@ -203,12 +217,16 @@ class Node(object):
                     d.dump(fh, newdepth)
                     fh.write(self.prefix*depth + d.get_closetag() + '\n\n')
                 else:
-                    fh.write(self.prefix*depth + str(d) + '\n')
+                    args = d.args or ''
+                    fh.write(self.prefix*depth + str(d) + ' ' + args + '\n')
         else:
             # print self.raw # NOCONTENT
             pass
 
     def __str__(self):
-        return self.name
+        if self.name is not None:
+            return self.name
+        else:
+            return self.raw
 
 

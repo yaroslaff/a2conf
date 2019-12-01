@@ -6,19 +6,21 @@ import logging
 import sys
 
 parser = argparse.ArgumentParser(description='Apache config parser')
-parser.add_argument('-i', '--infile', help='input filename')
+parser.add_argument('-i', '--infile', help='input filename', default='/etc/apache2/apache2.conf')
 parser.add_argument('--cmd', default=list(), nargs='*', help='show all these commands', type=str.lower)
-parser.add_argument('--filter', nargs=2, metavar=('Command','Argument'),
-                    help='Process only sections with this command/argument (command can be "ServerName,ServerList")', type=str.lower)
+parser.add_argument('--filter', nargs=2, metavar=('Command', 'Argument'),
+                    help='Process only sections with this command/argument (command can be "ServerName,ServerList")',
+                    type=str.lower)
 parser.add_argument('--negative', default=False, action='store_true', help='Negative filtering')
 parser.add_argument('--args', default=False, action='store_true', help='show only arguments')
 parser.add_argument('--uargs', default=False, action='store_true', help='show only unique arguments')
 parser.add_argument('--vhost', default=None, nargs='?', const='', help='VHOST format prefix')
 parser.add_argument('-v', '--verbose', default=False, action='store_true', help='verbose')
+parser.add_argument('--no-includes', default=True, dest='includes', action='store_false',
+                    help='Disable processing Include* directives')
 
 
 args = parser.parse_args()
-
 
 if args.verbose:
     loglevel = logging.DEBUG
@@ -38,12 +40,12 @@ if not args.infile:
     exit()
 
 # read file
-root = a2conf.Node(name='#root')
+root = a2conf.Node(name='#root', includes=args.includes)
 parent = root
 
 root.read_file(args.infile)
 
-arglist = list()
+arg_list = list()
 
 for vhost in root.all_nodes():
     if vhost.section and vhost.section.lower() == 'virtualhost':
@@ -51,9 +53,9 @@ for vhost in root.all_nodes():
         # skip or process?
         if args.filter:
             process = False
-            for checknode in vhost.get_nodes_cmd(args.filter[0].split(',')):
-                checkargs = checknode.args.split(' ')
-                if args.filter[1].lower() in map(str.lower, checkargs):
+            for check_node in vhost.get_nodes_cmd(args.filter[0].split(',')):
+                check_args = check_node.args.split(' ')
+                if args.filter[1].lower() in map(str.lower, check_args):
                     process = True
 
             if args.negative:
@@ -65,12 +67,12 @@ for vhost in root.all_nodes():
             else:
                 log.debug("Process VHost: {}".format(vhost))
 
-        ctx=dict()
+        ctx = dict()
         ctx['vhostargs'] = vhost.args
 
         if args.vhost is not None:
             # reset arglist if we use per-vhost output
-            arglist = list()
+            arg_list = list()
 
         # now process all statements inside vhost
         for cnode in vhost.children():
@@ -82,17 +84,16 @@ for vhost in root.all_nodes():
                     if cnode.cmd.lower() in args.cmd:
                         if args.args or args.uargs:
                             # process only args
-                            arglist.extend(filter(None, cnode.args.split(" ")))
+                            arg_list.extend(filter(None, cnode.args.split(" ")))
                         else:
                             print(cnode.cmd, cnode.args)
 
-        ctx['args'] = ' '.join(arglist)
-        ctx['uargs'] = ' '.join(set(arglist))
+        ctx['args'] = ' '.join(arg_list)
+        ctx['uargs'] = ' '.join(set(arg_list))
 
         if args.vhost is not None:
             # per-vhost
             log.debug(ctx)
-            #print(repr(args.vhost), vhost, repr(vhost.args))
             print(args.vhost.format(**ctx))
 
 
@@ -100,10 +101,8 @@ if args.vhost is None:
 
     # per-file summary
     if args.args:
-        print(' '.join(arglist))
+        print(' '.join(arg_list))
 
     if args.uargs:
-        uargs = set(arglist)
+        uargs = set(arg_list)
         print(' '.join(uargs))
-
-
