@@ -46,7 +46,7 @@ class LetsEncryptCertificateConfig:
         try:
             return self.content['[[webroot_map]]'].keys()
         except KeyError:
-            print("No [[webroot_map]] in {}".format(path))
+            print("No [[webroot_map]] in {}".format(self.path))
 
     def get_droot(self, domain):
         return self.content['[[webroot_map]]'][domain]
