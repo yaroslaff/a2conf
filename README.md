@@ -67,18 +67,18 @@ You can get list of all available tokens for `--vhost` option in verbose mode (`
 
 ## Properties and methods
 
-**raw** - text line as-is, with all spaces, tabs and with comments
+`raw` - text line as-is, with all spaces, tabs and with comments
 
-**cmd** - cmd ('ServerName') without args or None (if section)
+`cmd` - cmd ('ServerName') without args or None (if section)
 
-**section** - section (e.g. 'VirtualHost')
+`section` - section (e.g. 'VirtualHost')
 
-**args** - one text line args to cmd or section. for vhost args could be '*:80', for ServerAlias: 'example.com example.org'
+`args` - one text line args to cmd or section. for vhost args could be '*:80', for ServerAlias: 'example.com example.org'
 
-**name** - name of node. cmd if node has cmd, or section name (in brackets) if this is section. e.g. 'ServerName' or
+`name` - name of node. cmd if node has cmd, or section name (in brackets) if this is section. e.g. 'ServerName' or
 '<VirtualHost>'
 
-**content** - list of child nodes (possible empty). For container sections (VirtualHost) attribute `content` is list
+`content` - list of child nodes (possible empty). For container sections (VirtualHost) attribute `content` is list
  of children. For usual commands (e.g. ServerName) - empty list.
 
 
@@ -87,18 +87,18 @@ You can get list of all available tokens for `--vhost` option in verbose mode (`
 `__init__(self, read=filename, raw=None, parent=None, name=None, path=None, line=None, includes=True)` - In most cases you should not need to use
 any parameters here except `includes` and `read`. `read` is apache config filename to read. Use `includes=False` if you want `read_file` method to ignore `Include*` directives.
 
-**children(name=None, recursive=None)** - Main query method, returns generator for all children  nodes (e.g. for VirtualHost node). Generator is empty if no
+`children(name=None, recursive=None)` - Main query method, returns generator for all children  nodes (e.g. for VirtualHost node). Generator is empty if no
 children. If name specified, generator will return only nodes with this name (e.g. 'servername' or '<VirtualHost>'). If recursive is On,
 generator will return nested nodes too (e.g. what is inside `<IfModule>` or `<Directory>` settings). To get just one first element use
 `next(node.children('ServerName'))`. It will raise `StopIteration` if node has no such children elements.
 
-**first(name, recursive=None)** - wrapper for children(). Returns only first element or None. Not raising exceptions.
+`first(name, recursive=None)` - wrapper for children(). Returns only first element or None. Not raising exceptions.
 
-**read_file(filename)** - Reads apache config. Called automatically from `__init__` if you specified `read` argument.
+`read_file(filename)` - Reads apache config. Called automatically from `__init__` if you specified `read` argument.
 
-**dump(fh=sys.stdout, depth=0):** - dump loaded config in unified format (indented). if fh not specified, just dumps to stdout()
+`dump(fh=sys.stdout, depth=0)` - dump loaded config in unified format (indented). if fh not specified, just dumps to stdout()
 
-**write_file(filename)** - opens file for writing and dump() to this file.
+`write_file(filename)` - opens file for writing and dump() to this file.
 
 ## Examples
 
