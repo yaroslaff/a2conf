@@ -166,46 +166,8 @@ $ examples/ex2_query.py examples/example.conf
 example.com has SSL enabled
 ```
 
-### Replace values
-`examples/ex3_replace.py` disables SSLEngine directive:
-~~~
-#!/usr/bin/env python3
-import sys
-import a2conf
-root = a2conf.Node(sys.argv[1])
-for ssl in root.children('SSLEngine', recursive=True):
-    ssl.args = "Off"
-root.dump()
-~~~
-
-Output:
-~~~
-$ examples/ex3_replace.py examples/example.conf
-# asdf
-<VirtualHost *:80>
-    # zzzz
-    DocumentRoot /var/www/example
-    ServerName example.com
-    ServerAlias www.example.com example.com 1.example.com 2.example.com
-    DirectoryIndex index.html index.htm default.htm index.php
-    Options -Indexes +FollowSymLinks
-</VirtualHost>
-
-<VirtualHost *:443>
-    DocumentRoot /var/www/example
-    ServerName example.com
-    ServerAlias www.example.com 1.example.com 2.example.com secure.example.com
-    DirectoryIndex index.html index.htm default.htm index.php
-    Options -Indexes +FollowSymLinks
-    SSLEngine Off
-    SSLCertificateFile /etc/letsencrypt/live/example.com/fullchain.pem
-    SSLCertificateKeyFile /etc/letsencrypt/live/example.com/privkey.pem
-    SSLCertificateChainFile /etc/letsencrypt/live/example.com/chain.pem
-</VirtualHost>
-~~~
-
-### Delete statements
-`examples/ex4_delete.py` delete vhost without SSLEngine and also delete ServerAlias:
+### Replace and delete
+`examples/ex3_replace_delete.py` disables SSLEngine directive:
 ~~~
 #!/usr/bin/env python3
 import sys
@@ -213,27 +175,25 @@ import a2conf
 root = a2conf.Node(sys.argv[1])
 
 for vhost in root.children('<VirtualHost>'):
-    if vhost.first('sslengine') is None:
+    if vhost.first('sslengine'):
         vhost.delete()
+    else:
+        vhost.first('DocumentRoot').args = '/var/www/example2'
+        vhost.first('DocumentRoot').suffix = '# New DocumentRoot!'
+        vhost.first('ServerAlias').delete()
 
-for alias in root.children('ServerAlias', recursive=True):
-    alias.delete()
 root.dump()
 ~~~
 
 Output:
 ~~~
-$ examples/ex4_delete.py examples/example.conf
+$ examples/ex3_replace_delete.py examples/example.conf
 # asdf
-<VirtualHost *:443>
-    DocumentRoot /var/www/example
-    ServerName example.com
+<VirtualHost *:80>
+    # zzzz
+    DocumentRoot /var/www/example2 # New DocumentRoot!
+    ServerName example.com # .... OUR TEST SITE ....
     DirectoryIndex index.html index.htm default.htm index.php
     Options -Indexes +FollowSymLinks
-    SSLEngine On
-    SSLCertificateFile /etc/letsencrypt/live/example.com/fullchain.pem
-    SSLCertificateKeyFile /etc/letsencrypt/live/example.com/privkey.pem
-    SSLCertificateChainFile /etc/letsencrypt/live/example.com/chain.pem
 </VirtualHost>
 ~~~
-</details>

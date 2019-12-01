@@ -6,7 +6,7 @@ import os
 import glob
 
 class Node(object):
-    def __init__(self, read=None, raw=None, parent=None, name=None, path=None, line=None, includes=True):
+    def __init__(self, read=None, raw=None, parent=None, name=None, suffix=None, path=None, line=None, includes=True):
         self.raw = raw
         self.parent = parent
         self.content = list() # children
@@ -14,11 +14,19 @@ class Node(object):
         self.section = None # Section e.g. "VirtualHost" or None
         self.cmd = None # Command, e.g. "ServerName"
         self.args = None # Args to section (VirtualHost), e.g. "*:80" or
+        self.suffix = None
+        self.last_child = None
         self.includes = includes
 
         self.path = path # Filename
         self.line = line # line in file
 
+        if self.raw:
+            match = re.search('(#.*)$',self.raw)
+            if match:
+                self.suffix = match.group(0)
+            else:
+                self.suffix = ''
 
         if name:
             self.name = name
@@ -32,11 +40,12 @@ class Node(object):
                 self.name = '#root'
 
         if self.is_open():
-            m = re.match('[ \t]*<([^ >]+)([^>]+)', self.raw)
+            m = re.match('[ \t]*<([^ >]+)([^>]*)', self.raw)
             self.section = m.group(1)
             self.args = m.group(2).strip()
         elif self.is_close():
-            pass
+            m = re.match('[ \t]*<(/[^ >]+)([^>]*)', self.raw)
+            self.section = m.group(1)
         elif self.raw:
             cmdline = self.raw.split('#')[0].strip()
 
@@ -79,6 +88,7 @@ class Node(object):
         if self.content is None:
             self.content = list()
         self.content.append(child)
+        self.last_child = child
 
     def add_raw(self, raw):
         sl = Node(raw, parent=self)
@@ -154,8 +164,8 @@ class Node(object):
                     parent.add(node)
                     parent = node
                 elif node.is_close():
+                    parent.add(node)
                     parent = parent.parent
-                    # parent.add(node)
                 else:
                     parent.add(node)
 
@@ -194,8 +204,36 @@ class Node(object):
 
 
     def dump(self, fh=sys.stdout, depth=0):
-        # print myself first
-        newdepth = depth + 1
+        # Print line itself
+
+        if self.cmd:
+            fh.write("{}{} {} {}\n".format(self.prefix*depth, self.cmd, self.args, self.suffix))
+        elif self.section:
+            #
+            if self.section.startswith('/'):
+                line_depth = depth-1
+            else:
+                line_depth = depth
+
+            if self.args:
+                fh.write("{}<{} {}> {}\n".format(self.prefix*line_depth, self.section, self.args, self.suffix))
+            else:
+                fh.write("{}<{}> {}\n".format(self.prefix*line_depth, self.section, self.suffix))
+
+            if self.children:
+                for d in self.content:
+                    d.dump(fh, depth+1)
+
+        else:
+            # neither cmd, nor section
+            if self.suffix:
+                print(self.prefix*depth + self.suffix)
+            # root node
+            if self.children:
+                for d in self.content:
+                    d.dump(fh, depth)
+
+        return
 
         if self.content:
             for d in self.content:
@@ -208,7 +246,7 @@ class Node(object):
                 else:
                     if d.cmd:
                         args = d.args or ''
-                        fh.write(self.prefix*depth + str(d) + ' ' + args + '\n')
+                        fh.write(self.prefix*depth + str(d) + ' ' + args + self.suffix + '\n')
                     else:
                         fh.write(self.prefix*depth + d.raw + '\n')
         else:
