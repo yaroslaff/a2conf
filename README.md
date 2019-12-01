@@ -142,7 +142,7 @@ $ examples/ex1_dump.py examples/example.conf
 
 ### Query
 `examples/ex2_query.py` print all SSL sites from config:
-~~~
+~~~python3
 #!/usr/bin/env python3
 import sys
 import a2conf
