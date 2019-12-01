@@ -102,9 +102,12 @@ def resolve(name):
     :param name:
     :return:
     """
-    data = socket.gethostbyname_ex(name)
-    return data[2]
-    # except socket.gaierror:
+    try:
+        data = socket.gethostbyname_ex(name)
+        return data[2]
+    except socket.gaierror:
+        log.warning("WARNING: Cannot resolve {}".format(name))
+        return list()
 
 
 def process_file(path, local_ip_list, args):
