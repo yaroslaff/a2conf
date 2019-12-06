@@ -168,7 +168,7 @@ def process_file(path, local_ip_list, args):
         # certfile check
         #
 
-        certfile_node = vhost.first('SSLCertificateFile'))
+        certfile_node = vhost.first('SSLCertificateFile')
         if certfile_node:
             certfile = certfile_node.args
             report.info('Certfile: ' + certfile)
