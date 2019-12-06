@@ -118,7 +118,13 @@ def process_file(path, local_ip_list, args):
     lc = None
 
     for vhost in root.children('<VirtualHost>'):
-        servername = next(vhost.children('servername')).args
+        try:
+            servername = next(vhost.children('servername')).args
+        except StopIteration:
+            report = Report(path)
+            report.problem('Cannot get ServerName in {}:{}'.format(vhost.path, vhost.line))
+            continue
+
         report = Report(servername)
         report.info("Apache config file: {} line: {}".format(vhost.path, vhost.line))
 
