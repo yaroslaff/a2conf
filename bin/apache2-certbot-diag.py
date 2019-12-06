@@ -168,14 +168,15 @@ def process_file(path, local_ip_list, args):
         # certfile check
         #
 
-        certfile = next(vhost.children('SSLCertificateFile')).args
-        report.info('Certfile: ' + certfile)
-        if not os.path.isfile(certfile):
-            report.problem("Missing certfile: " + certfile)
+        certfile_node = vhost.first('SSLCertificateFile'))
+        if certfile_node:
+            certfile = certfile_node.args
+            report.info('Certfile: ' + certfile)
+            if not os.path.isfile(certfile):
+                report.problem("Missing certfile: " + certfile)
 
-        if not certfile.startswith(args.ledir):
-            report.problem('Certfile {} not in LetsEncrypt dir {}'.format(certfile, args.ledir))
-
+            if not certfile.startswith(args.ledir):
+                report.problem('Certfile {} not in LetsEncrypt dir {}'.format(certfile, args.ledir))
 
         #
         # Redirect check
