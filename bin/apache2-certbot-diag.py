@@ -128,10 +128,10 @@ def process_file(path, local_ip_list, args):
         report = Report(servername)
         report.info("Apache config file: {} line: {}".format(vhost.path, vhost.line))
 
-        try:
-            sslengine = next(vhost.children('sslengine'))
-        except StopIteration:
-            continue
+        # try:
+        #    sslengine = next(vhost.children('sslengine'))
+        #except StopIteration:
+        #    continue
 
         # if sslengine.args != 'on':
         #    log.debug("Skip {} because sslengine args are: {}".format(vhost, repr(sslengine.args)))
