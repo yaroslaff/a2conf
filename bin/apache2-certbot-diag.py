@@ -133,9 +133,9 @@ def process_file(path, local_ip_list, args):
         except StopIteration:
             continue
 
-        if sslengine.args != 'on':
-            log.debug("Skip {} because sslengine args are: {}".format(vhost, repr(sslengine.args)))
-            continue
+        # if sslengine.args != 'on':
+        #    log.debug("Skip {} because sslengine args are: {}".format(vhost, repr(sslengine.args)))
+        #    continue
 
         #
         # DNS names check
