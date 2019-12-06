@@ -165,32 +165,6 @@ def process_file(path, local_ip_list, args):
                 names_ok += 1
 
         #
-        # certfile check
-        #
-
-        certfile_node = vhost.first('SSLCertificateFile')
-        if certfile_node:
-            certfile = certfile_node.args
-            report.info('Certfile: ' + certfile)
-            if not os.path.isfile(certfile):
-                report.problem("Missing certfile: " + certfile)
-
-            if not certfile.startswith(args.ledir):
-                report.problem('Certfile {} not in LetsEncrypt dir {}'.format(certfile, args.ledir))
-
-        #
-        # Redirect check
-        #
-        try:
-            r = next(vhost.children('Redirect'))
-            rpath = r.args.split(' ')[1]
-            if rpath in ['/', '.well-known']:
-                report.problem('Requests will be redirected: {} {}'.format(r, r.args))
-        except StopIteration:
-            # No redirect, very good!
-            pass
-
-        #
         # DocumentRoot check
         #
 
@@ -205,32 +179,61 @@ def process_file(path, local_ip_list, args):
             else:
                 report.problem("DocumentRoot dir not exists: {} (problem!)".format(droot))
 
-        ledir_path_size = len(list(filter(None, args.ledir.split('/'))))
-        cert_relpath = list(filter(None, certfile.split('/')))[ledir_path_size:]
-        cert_name = cert_relpath[1]
-        report.info("Certificate name: " + cert_name)
+        #
+        # certfile check
+        #
 
-        leconf = os.path.join(args.ledir, 'renewal', cert_name + '.conf')
-        report.info("LetsEncrypt conf file: " + leconf)
-        if os.path.exists(leconf):
-            lc = LetsEncryptCertificateConfig(leconf)
+        certfile_node = vhost.first('SSLCertificateFile')
+        if certfile_node:
+            certfile = certfile_node.args
+            report.info('Certfile: ' + certfile)
+            if not os.path.isfile(certfile):
+                report.problem("Missing certfile: " + certfile)
+
+            if not certfile.startswith(args.ledir):
+                report.problem('Certfile {} not in LetsEncrypt dir {}'.format(certfile, args.ledir))
         else:
-            report.problem("Missing LetsEncrypt conf file " + leconf)
+            certfile = None
 
-        if lc:
-            for domain in lc.domains:
-                if domain in all_names:
-                    report.info('domain {} listed'.format(domain))
-                    ddroot = lc.get_droot(domain)
-                    if ddroot == droot:
-                        report.info('Domain name {} has valid document root'.format(domain))
+        #
+        # Redirect check
+        #
+        try:
+            r = next(vhost.children('Redirect'))
+            rpath = r.args.split(' ')[1]
+            if rpath in ['/', '.well-known']:
+                report.problem('Requests will be redirected: {} {}'.format(r, r.args))
+        except StopIteration:
+            # No redirect, very good!
+            pass
+
+        if certfile:
+            ledir_path_size = len(list(filter(None, args.ledir.split('/'))))
+            cert_relpath = list(filter(None, certfile.split('/')))[ledir_path_size:]
+            cert_name = cert_relpath[1]
+            report.info("Certificate name: " + cert_name)
+
+            leconf = os.path.join(args.ledir, 'renewal', cert_name + '.conf')
+            report.info("LetsEncrypt conf file: " + leconf)
+            if os.path.exists(leconf):
+                lc = LetsEncryptCertificateConfig(leconf)
+            else:
+                report.problem("Missing LetsEncrypt conf file " + leconf)
+
+            if lc:
+                for domain in lc.domains:
+                    if domain in all_names:
+                        report.info('domain {} listed'.format(domain))
+                        ddroot = lc.get_droot(domain)
+                        if ddroot == droot:
+                            report.info('Domain name {} has valid document root'.format(domain))
+                        else:
+                            report.info('DocRoot mismatch for {}. Site: {} Domain: {}'.format(domain, droot, ddroot))
+
                     else:
-                        report.info('DocRoot mismatch for {}. Site: {} Domain: {}'.format(domain, droot, ddroot))
-
-                else:
-                    report.problem('domain {} (from LetsEncrypt config) not found among this VirtualHost names'.format(domain))
-        else:
-            report.problem("skipped domain/docroot checks because no letsencrypt config")
+                        report.problem('domain {} (from LetsEncrypt config) not found among this VirtualHost names'.format(domain))
+            else:
+                report.problem("skipped domain/docroot checks because no letsencrypt config")
 
         #
         # Final check with requests
