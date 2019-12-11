@@ -153,6 +153,11 @@ def process_file(path, local_ip_list, args):
 
     lc = None
 
+    # alias checks
+    for alias in root.children('Alias'):
+        print("Alias:", alias, alias.args)
+
+
     for vhost in root.children('<VirtualHost>'):
         try:
             servername = next(vhost.children('servername')).args
