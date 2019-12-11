@@ -109,6 +109,42 @@ def resolve(name):
         log.warning("WARNING: Cannot resolve {}".format(name))
         return list()
 
+def simulate_check(servername, droot, report):
+    success = False
+    test_data = ''.join(random.choice(
+        string.ascii_uppercase + string.ascii_lowercase + string.digits) for _ in range(100))
+    test_basename = 'certbot_diag_' + ''.join(random.choice(
+        string.ascii_uppercase + string.ascii_lowercase + string.digits) for _ in range(10))
+    test_dir = os.path.join(droot, '.well-known', 'acme-challenge')
+    test_file = os.path.join(test_dir, test_basename)
+    report.info("Test file path: " + test_file)
+    test_url = 'http://' + servername + '/.well-known/acme-challenge/' + test_basename
+    report.info("Test file URL: " + test_url)
+
+    log.debug('create test file ' + test_file)
+    os.makedirs(test_dir, exist_ok=True)
+    with open(test_file, "w") as f:
+        f.write(test_data)
+
+    log.debug('test URL ' + test_url)
+    try:
+        r = requests.get(test_url, allow_redirects=True)
+    except requests.RequestException as e:
+        report.problem("URL {} got exception: {}".format(test_url, e))
+    else:
+        if r.status_code != 200:
+            report.problem('URL {} got status code {}. Maybe Alias or RewriteRule working?'.format(
+                test_url, r.status_code))
+        else:
+            if r.text == test_data:
+                report.info("test data matches")
+                success = True
+            else:
+                report.problem('test data not matches')
+
+    os.unlink(test_file)
+    return success
+
 
 def process_file(path, local_ip_list, args):
     log.debug("processing " + path)
@@ -239,37 +275,12 @@ def process_file(path, local_ip_list, args):
         # Final check with requests
         #
         if droot is not None and os.path.isdir(droot):
-            test_data = ''.join(random.choice(
-                string.ascii_uppercase + string.ascii_lowercase + string.digits) for _ in range(100))
-            test_basename = 'certbot_diag_' + ''.join(random.choice(
-                string.ascii_uppercase + string.ascii_lowercase + string.digits) for _ in range(10))
-            test_dir = os.path.join(droot, '.well-known', 'acme-challenge')
-            test_file = os.path.join(test_dir, test_basename)
-            report.info("Test file path: " + test_file)
-            test_url = 'http://'+servername+'/.well-known/acme-challenge/' + test_basename
-            report.info("Test file URL: " + test_url)
+            simulate_check(servername, droot, report)
 
-            log.debug('create test file ' + test_file)
-            os.makedirs(test_dir, exist_ok=True)
-            with open(test_file, "w") as f:
-                f.write(test_data)
+        if args.altroot:
+            simulate_check(servername, args.altroot, report)
 
-            log.debug('test URL '+test_url)
-            try:
-                r = requests.get(test_url, allow_redirects=True)
-            except requests.RequestException as e:
-                report.problem("URL {} got exception: {}".format(test_url, e))
-            else:
-                if r.status_code != 200:
-                    report.problem('URL {} got status code {}. Maybe Alias or RewriteRule working?'.format(
-                        test_url, r.status_code))
-                else:
-                    if r.text == test_data:
-                        report.info("test data matches")
-                    else:
-                        report.problem('test data not matches')
 
-            os.unlink(test_file)
         else:
             report.problem("skipped HTTP test because document root not exists")
         #
@@ -297,6 +308,8 @@ def main():
                         help='Default addresses. Autodetect if not specified')
     parser.add_argument('--ledir', default=def_ledir, metavar='LETSENCRYPT_DIR_PATH',
                         help='Lets Encrypt directory def: {}'.format(def_ledir))
+    parser.add_argument('--altroot', default=None, metavar='DocumentRoot',
+                        help='Try also other root (in case if Alias used). def: {}'.format(None))
 
     args = parser.parse_args()
 
