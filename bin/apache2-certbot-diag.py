@@ -141,10 +141,10 @@ def process_file(path, local_ip_list, args):
         # DNS names check
         #
         servername = next(vhost.children('servername')).args
-        all_names = [servername]
+        all_names = [ servername.lower() ]
         for aliascmd in vhost.children('serveralias'):
             for alias in aliascmd.args.split(' '):
-                all_names.append(alias)
+                all_names.append(alias.lower())
         names_ok = 0
         names_failed = 0
         for name in all_names:
@@ -222,7 +222,7 @@ def process_file(path, local_ip_list, args):
 
             if lc:
                 for domain in lc.domains:
-                    if domain in all_names:
+                    if domain.lower() in all_names:
                         report.info('domain {} listed'.format(domain))
                         ddroot = lc.get_droot(domain)
                         if ddroot == droot:
