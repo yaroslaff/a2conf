@@ -155,7 +155,10 @@ def process_file(path, local_ip_list, args):
 
     # alias checks
     for alias in root.children('Alias'):
-        print("Alias:", alias, alias.args)
+        aliasfrom = alias.args.split(' ')[0]
+        if '/.well-known/acme-challenge/'.startswith(aliasfrom):
+            print("WARNING alias used:", alias, alias.args)
+            print("Consider using --altroot option")
 
 
     for vhost in root.children('<VirtualHost>'):
