@@ -117,9 +117,9 @@ def simulate_check(servername, droot, report):
         string.ascii_uppercase + string.ascii_lowercase + string.digits) for _ in range(10))
     test_dir = os.path.join(droot, '.well-known', 'acme-challenge')
     test_file = os.path.join(test_dir, test_basename)
-    report.info("Test file path: " + test_file)
+    #report.info("Test file path: " + test_file)
     test_url = 'http://' + servername + '/.well-known/acme-challenge/' + test_basename
-    report.info("Test file URL: " + test_url)
+    #report.info("Test file URL: " + test_url)
 
     log.debug('create test file ' + test_file)
     os.makedirs(test_dir, exist_ok=True)
@@ -137,10 +137,10 @@ def simulate_check(servername, droot, report):
                 test_url, r.status_code))
         else:
             if r.text == test_data:
-                report.info("test data matches")
+                report.info("Simulated check match root: {} url: {}".format(droot, test_url))
                 success = True
             else:
-                report.problem('test data not matches')
+                report.problem("Simulated check fails root: {} url: {}".format(droot, test_url))
 
     os.unlink(test_file)
     return success
