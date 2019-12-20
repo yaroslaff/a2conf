@@ -272,9 +272,9 @@ def process_file(path, local_ip_list, args):
                         if ddroot == droot:
                             report.info('Domain name {} has valid document root'.format(domain))
                         else:
-                            report.info('DocRoot mismatch for {}. Site: {} Domain: {}'.format(domain, droot, ddroot))
+                            report.problem('DocRoot mismatch for {}. Apache: {} LetsEncrypt: {}'.format(domain, droot, ddroot))
 
-                        simulate_check(domain.lower(), droot, report)
+                        simulate_check(domain.lower(), ddroot, report)
 
                     else:
                         report.problem('domain {} (from LetsEncrypt config) not found among this VirtualHost names'.format(domain))
