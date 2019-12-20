@@ -274,6 +274,8 @@ def process_file(path, local_ip_list, args):
                         else:
                             report.info('DocRoot mismatch for {}. Site: {} Domain: {}'.format(domain, droot, ddroot))
 
+                        simulate_check(domain.lower(), droot, report)
+
                     else:
                         report.problem('domain {} (from LetsEncrypt config) not found among this VirtualHost names'.format(domain))
             else:
