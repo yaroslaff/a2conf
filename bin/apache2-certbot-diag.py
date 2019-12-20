@@ -133,8 +133,8 @@ def simulate_check(servername, droot, report):
         report.problem("URL {} got exception: {}".format(test_url, e))
     else:
         if r.status_code != 200:
-            report.problem('URL {} got status code {}. Maybe Alias or RewriteRule working?'.format(
-                test_url, r.status_code))
+            report.problem('URL {} got status code {}. Used DocumentRoot {}. Maybe Alias or RewriteRule working?'.format(
+                test_url, r.status_code, droot))
         else:
             if r.text == test_data:
                 report.info("Simulated check match root: {} url: {}".format(droot, test_url))
