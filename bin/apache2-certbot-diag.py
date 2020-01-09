@@ -92,7 +92,7 @@ class Report:
 
 
 def detect_ip():
-    url = http://ifconfig.me/
+    url = 'http://ifconfig.me/'
     r = requests.get(url)
     if r.status_code != 200:
         log.error('Failed to get IP from {} ({}), use --ip a.b.c.d'.format(url, r.status_code))
