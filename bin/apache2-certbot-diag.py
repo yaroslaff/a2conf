@@ -291,13 +291,12 @@ def process_file(path, local_ip_list, args):
         #
         if droot is not None and os.path.isdir(droot):
             simulate_check(servername, droot, report)
+        else:
+            report.problem("skipped HTTP test because document root not exists")
 
         if args.altroot:
             simulate_check(servername, args.altroot, report)
 
-
-        else:
-            report.problem("skipped HTTP test because document root not exists")
         #
         # Final debug
         #
