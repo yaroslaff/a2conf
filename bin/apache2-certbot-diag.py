@@ -92,8 +92,13 @@ class Report:
 
 
 def detect_ip():
-    ip = requests.get('http://ifconfig.me/')
-    return ['127.0.0.1', ip.text]
+    url = http://ifconfig.me/
+    r = requests.get(url)
+    if r.status_code != 200:
+        log.error('Failed to get IP from {} ({}), use --ip a.b.c.d'.format(url, r.status_code))
+
+    assert(r.status_code == 200)
+    return ['127.0.0.1', r.text]
 
 
 def resolve(name):
@@ -269,7 +274,7 @@ def process_file(path, local_ip_list, args):
                     if domain.lower() in all_names:
                         report.info('domain {} listed'.format(domain))
                         ddroot = lc.get_droot(domain)
-                        if ddroot == droot:
+                        if os.path.realpath(ddroot) == os.path.realpath(droot):
                             report.info('Domain name {} has valid document root'.format(domain))
                         else:
                             report.problem('DocRoot mismatch for {}. Apache: {} LetsEncrypt: {}'.format(domain, droot, ddroot))
