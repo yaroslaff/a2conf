@@ -238,9 +238,16 @@ def process_file(leconf, local_ip_list, args):
             # DocumentRoot matches?
             #
             if os.path.realpath(le_droot) == os.path.realpath(droot):
-                report.info('Domain name {} has valid document root'.format(domain))
+                report.info('DocumentRoot {} matches LetsEncrypt and Apache'.format(droot))
             else:
                 report.problem('DocRoot mismatch for {}. Apache: {} LetsEncrypt: {}'.format(domain, droot, le_droot))
+
+            if args.altroot:
+                if os.path.realpath(le_droot) == os.path.realpath(args.altroot):
+                    report.info('Domain name {} le root {} matches altroot'.format(domain, le_droot))
+                else:
+                    report.problem(
+                        'DocRoot mismatch for {}. AltRoot: {} LetsEncrypt: {}'.format(domain, args.altroot, le_droot))
 
             simulate_check(domain.lower(), droot, report)
 
