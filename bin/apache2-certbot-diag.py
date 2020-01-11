@@ -245,15 +245,12 @@ def process_file(leconf, local_ip_list, args):
                 else:
                     report.problem(
                         'DocRoot mismatch for {}. Apache: {} LetsEncrypt: {}'.format(domain, droot, le_droot))
-
                 simulate_check(domain.lower(), droot, report)
-
             else:
                 # AltRoot
                 if os.path.realpath(le_droot) == os.path.realpath(args.altroot):
                     report.info('Domain name {} le root {} matches --altroot'.format(domain, le_droot))
                     simulate_check(domain.lower(), le_droot, report)
-
                 elif os.path.realpath(le_droot) == os.path.realpath(droot):
                     report.info('Domain name {} le root {} matches DocumentRoot'.format(domain, le_droot))
                     simulate_check(domain.lower(), droot, report)
@@ -261,14 +258,6 @@ def process_file(leconf, local_ip_list, args):
                     report.problem(
                         'DocRoot mismatch for {}. AltRoot: {} LetsEncrypt: {} Apache: {}'.format(
                             domain, args.altroot, le_droot, droot))
-
-
-
-            #
-            # Alt root check
-            #
-            if args.altroot:
-                simulate_check(domain, args.altroot, report)
 
     except FatalError:
         pass
