@@ -237,19 +237,32 @@ def process_file(leconf, local_ip_list, args):
             #
             # DocumentRoot matches?
             #
-            if os.path.realpath(le_droot) == os.path.realpath(droot):
-                report.info('DocumentRoot {} matches LetsEncrypt and Apache'.format(droot))
-            else:
-                report.problem('DocRoot mismatch for {}. Apache: {} LetsEncrypt: {}'.format(domain, droot, le_droot))
 
-            if args.altroot:
-                if os.path.realpath(le_droot) == os.path.realpath(args.altroot):
-                    report.info('Domain name {} le root {} matches altroot'.format(domain, le_droot))
+            if not args.altroot:
+                # No altroot, simple check
+                if os.path.realpath(le_droot) == os.path.realpath(droot):
+                    report.info('DocumentRoot {} matches LetsEncrypt and Apache'.format(droot))
                 else:
                     report.problem(
-                        'DocRoot mismatch for {}. AltRoot: {} LetsEncrypt: {}'.format(domain, args.altroot, le_droot))
+                        'DocRoot mismatch for {}. Apache: {} LetsEncrypt: {}'.format(domain, droot, le_droot))
 
-            simulate_check(domain.lower(), droot, report)
+                simulate_check(domain.lower(), droot, report)
+
+            else:
+                # AltRoot
+                if os.path.realpath(le_droot) == os.path.realpath(args.altroot):
+                    report.info('Domain name {} le root {} matches --altroot'.format(domain, le_droot))
+                    simulate_check(domain.lower(), le_droot, report)
+
+                elif os.path.realpath(le_droot) == os.path.realpath(droot):
+                    report.info('Domain name {} le root {} matches DocumentRoot'.format(domain, le_droot))
+                    simulate_check(domain.lower(), droot, report)
+                else:
+                    report.problem(
+                        'DocRoot mismatch for {}. AltRoot: {} LetsEncrypt: {} Apache: {}'.format(
+                            domain, args.altroot, le_droot, droot))
+
+
 
             #
             # Alt root check
