@@ -11,6 +11,8 @@ import string
 
 log = None
 
+class FatalError(Exception):
+    pass
 
 class LetsEncryptCertificateConfig:
     def __init__(self, path):
@@ -151,171 +153,126 @@ def simulate_check(servername, droot, report):
     return success
 
 
-def process_file(path, local_ip_list, args):
-    log.debug("processing " + path)
-    root = a2conf.Node(name='#root')
-    root.read_file(path)
+def is_local_ip(hostname, local_ip_list, report):
+    iplist = resolve(hostname)
+    for ip in iplist:
+        if ip in local_ip_list:
+            report.info('{} is local {}'.format(hostname, ip))
+        else:
+            report.problem('{} ({}) not local {}'.format(hostname, ip, local_ip_list))
 
-    lc = None
-
-    # alias checks
-    for alias in root.children('Alias'):
-        aliasfrom = alias.args.split(' ')[0]
-        if '/.well-known/acme-challenge/'.startswith(aliasfrom):
-            print("WARNING alias used:", alias, alias.args)
-            print("Consider using --altroot option")
-
+def get_vhost(domain, apacheconf):
+    root = a2conf.Node()
+    root.read_file(apacheconf)
 
     for vhost in root.children('<VirtualHost>'):
+        if not '80' in vhost.args:
+            # log.debug('Skip vhost {}:{} (no 80 in {})'.format(vhost.path, vhost.line, vhost.args))
+            continue
         try:
             servername = next(vhost.children('servername')).args
         except StopIteration:
-            report = Report(path)
-            report.problem('Cannot get ServerName in {}:{}'.format(vhost.path, vhost.line))
+            # log.debug('Skip vhost {}:{} (no ServerName)'.format(vhost.path, vhost.line))
             continue
 
-        report = Report(servername)
-        report.info("Apache config file: {} line: {}".format(vhost.path, vhost.line))
+        if domain.lower() == servername.lower():
+            return vhost
 
-        # try:
-        #    sslengine = next(vhost.children('sslengine'))
-        #except StopIteration:
-        #    continue
+        for alias in vhost.children('serveralias'):
+            if domain.lower() in map(str.lower, alias.args.split(' ')):
+                return vhost
 
-        # if sslengine.args != 'on':
-        #    log.debug("Skip {} because sslengine args are: {}".format(vhost, repr(sslengine.args)))
-        #    continue
+    return None
 
-        #
-        # DNS names check
-        #
-        servername = next(vhost.children('servername')).args
-        all_names = [ servername.lower() ]
-        for aliascmd in vhost.children('serveralias'):
-            for alias in aliascmd.args.split(' '):
-                all_names.append(alias.lower())
-        names_ok = 0
-        names_failed = 0
-        for name in all_names:
-            ip_list = resolve(name)
-            # log.debug("    {} resolved to: {}".format(name, ip_list))
-            non_local = 0  # failed ips
+def process_file(leconf, local_ip_list, args):
+    log.debug("processing " + leconf)
+    report = Report(os.path.basename(leconf))
 
-            for ip in ip_list:
-                if ip not in local_ip_list:
-                    non_local += 1
-                    report.problem("DNS {} is {} (not local)".format(name, ip))
+    try:
+        report.info("LetsEncrypt conf file: " + leconf)
+        if os.path.exists(leconf):
+            lc = LetsEncryptCertificateConfig(leconf)
+        else:
+            report.problem("Missing LetsEncrypt conf file " + leconf)
+            raise FatalError
+
+        # Local IP check
+        for domain in lc.domains:
+            log.debug("check domain {} from {}".format(domain, leconf))
+            le_droot = lc.get_droot(domain)
+
+            is_local_ip(domain, local_ip_list, report)
+            vhost = get_vhost(domain, args.apacheconf)
+
+            if not vhost:
+                report.problem('Not found domain {} in {}'.format(domain, args.apacheconf))
+                continue
+
+            #
+            # DocumentRoot exists?
+            #
+            droot = None
+            try:
+                droot = next(vhost.children('DocumentRoot')).args
+            except StopIteration:
+                report.problem("No DocumentRoot!")
+            else:
+                if droot is not None and os.path.isdir(droot):
+                    report.info("DocumentRoot: {}".format(droot))
                 else:
-                    report.info("DNS {} is {} (local)".format(name, ip))
+                    report.problem("DocumentRoot dir not exists: {} (problem!)".format(droot))
 
-            if non_local:
-                names_failed += 1
+            #
+            # Redirect check
+            #
+            try:
+                r = next(vhost.children('Redirect'))
+                rpath = r.args.split(' ')[1]
+                if rpath in ['/', '.well-known']:
+                    report.problem('Requests will be redirected: {} {}'.format(r, r.args))
+            except StopIteration:
+                # No redirect, very good!
+                pass
+
+            #
+            # DocumentRoot matches?
+            #
+            if os.path.realpath(le_droot) == os.path.realpath(droot):
+                report.info('Domain name {} has valid document root'.format(domain))
             else:
-                names_ok += 1
+                report.problem('DocRoot mismatch for {}. Apache: {} LetsEncrypt: {}'.format(domain, droot, le_droot))
 
-        #
-        # DocumentRoot check
-        #
+            simulate_check(domain.lower(), droot, report)
 
-        droot = None
-        try:
-            droot = next(vhost.children('DocumentRoot')).args
-        except StopIteration:
-            report.problem("No DocumentRoot!")
-        else:
-            if droot is not None and os.path.isdir(droot):
-                report.info("DocumentRoot: {}".format(droot))
-            else:
-                report.problem("DocumentRoot dir not exists: {} (problem!)".format(droot))
+            #
+            # Alt root check
+            #
+            if args.altroot:
+                simulate_check(servername, args.altroot, report)
 
-        #
-        # certfile check
-        #
+    except FatalError:
+        pass
+    # END OF FINISHED PART
+    #
+    # Final debug
+    #
+    if report.has_problems() or not args.quiet:
+        report.report()
 
-        certfile_node = vhost.first('SSLCertificateFile')
-        if certfile_node:
-            certfile = certfile_node.args
-            report.info('Certfile: ' + certfile)
-            if not os.path.isfile(certfile):
-                report.problem("Missing certfile: " + certfile)
-
-            if not certfile.startswith(args.ledir):
-                report.problem('Certfile {} not in LetsEncrypt dir {}'.format(certfile, args.ledir))
-        else:
-            certfile = None
-
-        #
-        # Redirect check
-        #
-        try:
-            r = next(vhost.children('Redirect'))
-            rpath = r.args.split(' ')[1]
-            if rpath in ['/', '.well-known']:
-                report.problem('Requests will be redirected: {} {}'.format(r, r.args))
-        except StopIteration:
-            # No redirect, very good!
-            pass
-
-        if certfile:
-            ledir_path_size = len(list(filter(None, args.ledir.split('/'))))
-            cert_relpath = list(filter(None, certfile.split('/')))[ledir_path_size:]
-            cert_name = cert_relpath[1]
-            report.info("Certificate name: " + cert_name)
-
-            leconf = os.path.join(args.ledir, 'renewal', cert_name + '.conf')
-            report.info("LetsEncrypt conf file: " + leconf)
-            if os.path.exists(leconf):
-                lc = LetsEncryptCertificateConfig(leconf)
-            else:
-                report.problem("Missing LetsEncrypt conf file " + leconf)
-
-            if lc:
-                for domain in lc.domains:
-                    if domain.lower() in all_names:
-                        report.info('domain {} listed'.format(domain))
-                        ddroot = lc.get_droot(domain)
-                        if os.path.realpath(ddroot) == os.path.realpath(droot):
-                            report.info('Domain name {} has valid document root'.format(domain))
-                        else:
-                            report.problem('DocRoot mismatch for {}. Apache: {} LetsEncrypt: {}'.format(domain, droot, ddroot))
-
-                        simulate_check(domain.lower(), ddroot, report)
-
-                    else:
-                        report.problem('domain {} (from LetsEncrypt config) not found among this VirtualHost names'.format(domain))
-            else:
-                report.problem("skipped domain/docroot checks because no letsencrypt config")
-
-        #
-        # Final check with requests
-        #
-        if droot is not None and os.path.isdir(droot):
-            simulate_check(servername, droot, report)
-        else:
-            report.problem("skipped HTTP test because document root not exists")
-
-        if args.altroot:
-            simulate_check(servername, args.altroot, report)
-
-        #
-        # Final debug
-        #
-        if report.has_problems() or not args.quiet:
-            report.report()
-
+    return
 
 def main():
     global log
 
     def_file = '/etc/apache2/apache2.conf'
-    def_ledir = '/etc/letsencrypt/renewal/'
+    def_lepath = '/etc/letsencrypt/renewal/'
 
     parser = argparse.ArgumentParser(description='Apache2 / Certbot misconfiguration diagnostic')
 
-    parser.add_argument(default=def_ledir, metavar='LETSENCRYPT_DIR_PATH',
-                        help='Lets Encrypt directory def: {}'.format(def_ledir))
-    parser.add_argument('-a', '--apacheconf', dest='file', nargs='?', default=def_file, metavar='PATH',
-                        help='Config file(s) path (def: {}). Either filename or directory'.format(def_file))
+    parser.add_argument(default=def_lepath, nargs='?', dest='lepath', metavar='LETSENCRYPT_DIR_PATH',
+                        help='Lets Encrypt directory def: {}'.format(def_lepath))
+    parser.add_argument('-a', '--apacheconf', dest='apacheconf', nargs='?', default=def_file, metavar='PATH',
+                        help='Config file path (def: {})'.format(def_file))
     parser.add_argument('-v', '--verbose', action='store_true',
                         default=False, help='verbose mode')
     parser.add_argument('-q', '--quiet', action='store_true',
@@ -346,14 +303,14 @@ def main():
         local_ip_list = detect_ip()
     log.debug("my IP list: {}".format(local_ip_list))
 
-    if os.path.isdir(args.file):
-        for f in os.listdir(args.file):
-            path = os.path.join(args.file, f)
+    if os.path.isdir(args.lepath):
+        for f in os.listdir(args.lepath):
+            path = os.path.join(args.lepath, f)
             if not (os.path.isfile(path) or os.path.islink(path)):
                 continue
             process_file(path, local_ip_list, args)
     else:
-        process_file(args.file, local_ip_list, args)
+        process_file(args.lepath, local_ip_list, args)
 
 
 main()
