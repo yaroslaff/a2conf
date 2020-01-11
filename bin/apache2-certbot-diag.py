@@ -308,11 +308,13 @@ def main():
     global log
 
     def_file = '/etc/apache2/apache2.conf'
-    def_ledir = '/etc/letsencrypt/'
+    def_ledir = '/etc/letsencrypt/renewal/'
 
     parser = argparse.ArgumentParser(description='Apache2 / Certbot misconfiguration diagnostic')
 
-    parser.add_argument(dest='file', nargs='?', default=def_file, metavar='PATH',
+    parser.add_argument(default=def_ledir, metavar='LETSENCRYPT_DIR_PATH',
+                        help='Lets Encrypt directory def: {}'.format(def_ledir))
+    parser.add_argument('-a', '--apacheconf', dest='file', nargs='?', default=def_file, metavar='PATH',
                         help='Config file(s) path (def: {}). Either filename or directory'.format(def_file))
     parser.add_argument('-v', '--verbose', action='store_true',
                         default=False, help='verbose mode')
@@ -320,8 +322,6 @@ def main():
                         default=False, help='quiet mode, suppress output for sites without problems')
     parser.add_argument('-i', '--ip', nargs='*',
                         help='Default addresses. Autodetect if not specified')
-    parser.add_argument('--ledir', default=def_ledir, metavar='LETSENCRYPT_DIR_PATH',
-                        help='Lets Encrypt directory def: {}'.format(def_ledir))
     parser.add_argument('--altroot', default=None, metavar='DocumentRoot',
                         help='Try also other root (in case if Alias used). def: {}'.format(None))
 
