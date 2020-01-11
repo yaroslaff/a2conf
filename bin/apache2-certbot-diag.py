@@ -188,6 +188,8 @@ def process_file(leconf, local_ip_list, args):
     log.debug("processing " + leconf)
     report = Report(os.path.basename(leconf))
 
+    docroot_verified = list()
+
     try:
         report.info("LetsEncrypt conf file: " + leconf)
         if os.path.exists(leconf):
@@ -245,18 +247,21 @@ def process_file(leconf, local_ip_list, args):
                 else:
                     report.problem(
                         'DocRoot mismatch for {}. Apache: {} LetsEncrypt: {}'.format(domain, droot, le_droot))
-                log.debug('1')
-                simulate_check(domain.lower(), droot, report)
+                if droot not in docroot_verified:
+                    if simulate_check(domain.lower(), droot, report):
+                        docroot_verified.append(droot)
             else:
                 # AltRoot
                 if os.path.realpath(le_droot) == os.path.realpath(args.altroot):
                     report.info('Domain name {} le root {} matches --altroot'.format(domain, le_droot))
-                    log.debug('2')
-                    simulate_check(domain.lower(), le_droot, report)
+                    if droot not in docroot_verified:
+                        if simulate_check(domain.lower(), le_droot, report):
+                            docroot_verified.append(droot)
                 elif os.path.realpath(le_droot) == os.path.realpath(droot):
                     report.info('Domain name {} le root {} matches DocumentRoot'.format(domain, le_droot))
-                    log.debug('3')
-                    simulate_check(domain.lower(), droot, report)
+                    if droot not in docroot_verified:
+                        if simulate_check(domain.lower(), droot, report):
+                            docroot_verified.append(droot)
                 else:
                     report.problem(
                         'DocRoot mismatch for {}. AltRoot: {} LetsEncrypt: {} Apache: {}'.format(
