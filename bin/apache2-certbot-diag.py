@@ -248,7 +248,7 @@ def process_file(leconf, local_ip_list, args):
             # Alt root check
             #
             if args.altroot:
-                simulate_check(servername, args.altroot, report)
+                simulate_check(domain, args.altroot, report)
 
     except FatalError:
         pass
