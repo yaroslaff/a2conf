@@ -18,8 +18,8 @@ class Node(object):
         self.last_child = None
         self.includes = includes
 
-        self.path = path # Filename
-        self.line = line # line in file
+        self.path = path  # Filename
+        self.line = line  # line in file
 
         if self.raw:
             match = re.search('(#.*)$',self.raw)
