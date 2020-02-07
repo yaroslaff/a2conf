@@ -217,7 +217,8 @@ def process_file(leconf, local_ip_list, args):
             try:
                 droot = next(vhost.children('DocumentRoot')).args
             except StopIteration:
-                report.problem("No DocumentRoot!")
+                report.problem("No DocumentRoot in vhost {}".format(vhost))
+                raise FatalError
             else:
                 if droot is not None and os.path.isdir(droot):
                     report.info("DocumentRoot: {}".format(droot))
