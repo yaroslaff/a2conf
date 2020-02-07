@@ -208,7 +208,7 @@ def process_file(leconf, local_ip_list, args):
 
             if not vhost:
                 report.problem('Not found domain {} in {}'.format(domain, args.apacheconf))
-                continue
+                raise FatalError
 
             #
             # DocumentRoot exists?
