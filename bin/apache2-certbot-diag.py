@@ -198,6 +198,10 @@ def process_file(leconf, local_ip_list, args):
             report.problem("Missing LetsEncrypt conf file " + leconf)
             raise FatalError
 
+        if args.host and not args.host in lc.domains:
+            log.debug('Skip file {}: not found domain {}'.format(leconf, args.host))
+            return
+
         # Local IP check
         for domain in lc.domains:
             log.debug("check domain {} from {}".format(domain, leconf))
@@ -299,6 +303,8 @@ def main():
                         help='Default addresses. Autodetect if not specified')
     parser.add_argument('--altroot', default=None, metavar='DocumentRoot',
                         help='Try also other root (in case if Alias used). def: {}'.format(None))
+    parser.add_argument('--host', default=None, metavar='HOST',
+                        help='Process only letsencrypt config file for HOST. def: {}'.format(None))
 
     args = parser.parse_args()
 
