@@ -15,12 +15,21 @@ class FatalError(Exception):
     pass
 
 class LetsEncryptCertificateConfig:
-    def __init__(self, path):
-        self.path = path
+    def __init__(self, path, webroot, domains):
         self.content = dict()
-        self.readfile(path)
+        if webroot:
+            self.init_webroot(webroot, domains)
+        else:
+            self.init_readfile(path)
 
-    def readfile(self, path):
+    def init_webroot(self, webroot, domains):
+        self.path = '::internal::'
+        self.content = dict()
+        self.content['[[webroot_map]]'] = dict()
+        for domain in domains:
+            self.content['[[webroot_map]]'][domain] = webroot
+
+    def init_readfile(self, path):
         self.path = path
         self.content = dict()
         self.content[''] = dict()
@@ -184,27 +193,30 @@ def get_vhost(domain, apacheconf):
 
     return None
 
-def process_file(leconf, local_ip_list, args):
-    log.debug("processing " + leconf)
-    report = Report(os.path.basename(leconf))
+def process_file(leconf_path, local_ip_list, args, leconf=None):
 
     docroot_verified = list()
+    report = Report(leconf_path or 'internal')
 
     try:
-        report.info("LetsEncrypt conf file: " + leconf)
-        if os.path.exists(leconf):
-            lc = LetsEncryptCertificateConfig(leconf)
+
+        if not leconf:
+            report.info("LetsEncrypt conf file: " + leconf_path)
+            if os.path.exists(leconf_path):
+                lc = LetsEncryptCertificateConfig(path=leconf_path)
+            else:
+                report.problem("Missing LetsEncrypt conf file " + leconf_path)
+                raise FatalError
         else:
-            report.problem("Missing LetsEncrypt conf file " + leconf)
-            raise FatalError
+            lc = leconf
 
         if args.host and not args.host in lc.domains:
-            log.debug('Skip file {}: not found domain {}'.format(leconf, args.host))
+            log.debug('Skip file {}: not found domain {}'.format(leconf_path, args.host))
             return
 
         # Local IP check
         for domain in lc.domains:
-            log.debug("check domain {} from {}".format(domain, leconf))
+            log.debug("check domain {} from {}".format(domain, leconf_path))
             le_droot = lc.get_droot(domain)
 
             is_local_ip(domain, local_ip_list, report)
@@ -291,20 +303,29 @@ def main():
 
     parser = argparse.ArgumentParser(description='Apache2 / Certbot misconfiguration diagnostic')
 
-    parser.add_argument(default=def_lepath, nargs='?', dest='lepath', metavar='LETSENCRYPT_DIR_PATH',
-                        help='Lets Encrypt directory def: {}'.format(def_lepath))
-    parser.add_argument('-a', '--apacheconf', dest='apacheconf', nargs='?', default=def_file, metavar='PATH',
-                        help='Config file path (def: {})'.format(def_file))
-    parser.add_argument('-v', '--verbose', action='store_true',
-                        default=False, help='verbose mode')
-    parser.add_argument('-q', '--quiet', action='store_true',
-                        default=False, help='quiet mode, suppress output for sites without problems')
-    parser.add_argument('-i', '--ip', nargs='*',
-                        help='Default addresses. Autodetect if not specified')
-    parser.add_argument('--altroot', default=None, metavar='DocumentRoot',
-                        help='Try also other root (in case if Alias used). def: {}'.format(None))
-    parser.add_argument('--host', default=None, metavar='HOST',
-                        help='Process only letsencrypt config file for HOST. def: {}'.format(None))
+
+    g = parser.add_argument_group('Check existent LetsEncrypt verification (if "certbot renew" fails)')
+    g.add_argument('--host', default=None, metavar='HOST',
+                   help='Process only letsencrypt config file for HOST. def: {}'.format(None))
+    g.add_argument(default=def_lepath, nargs='?', dest='lepath', metavar='LETSENCRYPT_DIR_PATH',
+                   help='Lets Encrypt directory def: {}'.format(def_lepath))
+
+    g = parser.add_argument_group('Check non-existent LetsEncrypt verification (if "certbot certonly --webroot" fails)')
+    g.add_argument('-w', '--webroot', help='DocumentRoot for new website')
+    g.add_argument('-d', '--domain', nargs='*', metavar='DOMAIN', help='hostname/domain for new website')
+
+    g = parser.add_argument_group('General options')
+    g.add_argument('--altroot', default=None, metavar='DocumentRoot',
+                   help='Try also other root (in case if Alias used). def: {}'.format(None))
+    g.add_argument('-a', '--apacheconf', dest='apacheconf', nargs='?', default=def_file, metavar='PATH',
+                   help='Config file path (def: {})'.format(def_file))
+    g.add_argument('-v', '--verbose', action='store_true',
+                   default=False, help='verbose mode')
+    g.add_argument('-q', '--quiet', action='store_true',
+                   default=False, help='quiet mode, suppress output for sites without problems')
+    g.add_argument('-i', '--ip', nargs='*',
+                   help='Default addresses. Autodetect if not specified')
+
 
     args = parser.parse_args()
 
@@ -327,14 +348,19 @@ def main():
         local_ip_list = detect_ip()
     log.debug("my IP list: {}".format(local_ip_list))
 
-    if os.path.isdir(args.lepath):
+
+    if args.webroot:
+        lc = LetsEncryptCertificateConfig(path=None, webroot=args.webroot, domains=args.domain)
+        process_file(leconf_path=None, local_ip_list=local_ip_list, args=args, leconf=lc)
+
+    elif os.path.isdir(args.lepath):
         for f in os.listdir(args.lepath):
             path = os.path.join(args.lepath, f)
             if not (os.path.isfile(path) or os.path.islink(path)):
                 continue
-            process_file(path, local_ip_list, args)
+            process_file(leconf_path=path, local_ip_list=local_ip_list, args=args)
     else:
-        process_file(args.lepath, local_ip_list, args)
+        process_file(leconf_path=args.lepath, local_ip_list=local_ip_list, args=args)
 
 
 main()
