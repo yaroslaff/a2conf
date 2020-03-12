@@ -187,7 +187,7 @@ def yield_vhost(domain, apacheconf):
         if domain.lower() == servername.lower():
             # return vhost
             yield vhost
-p
+
         for alias in vhost.children('serveralias'):
             if domain.lower() in map(str.lower, alias.args.split(' ')):
                 # return vhost
