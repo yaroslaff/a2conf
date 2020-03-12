@@ -185,11 +185,13 @@ def get_vhost(domain, apacheconf):
             continue
 
         if domain.lower() == servername.lower():
-            return vhost
+            # return vhost
+            yield vhost
 
         for alias in vhost.children('serveralias'):
             if domain.lower() in map(str.lower, alias.args.split(' ')):
-                return vhost
+                # return vhost
+                yield vhost
 
     return None
 
@@ -220,11 +222,18 @@ def process_file(leconf_path, local_ip_list, args, leconf=None):
             le_droot = lc.get_droot(domain)
 
             is_local_ip(domain, local_ip_list, report)
-            vhost = get_vhost(domain, args.apacheconf)
+            vhost_list = list(get_vhost_list(domain, args.apacheconf))
 
-            if not vhost:
+            if not vhost_list:
                 report.problem('Not found domain {} in {}'.format(domain, args.apacheconf))
                 raise FatalError
+
+            if len(vhost_list) > 1:
+                report.problem('Found {} virtualhost for {} in {}'.format(len(vhost_list), domain, args.apacheconf))
+                raise FatalError
+
+            vhost = vhost_list[0]
+
 
             #
             # DocumentRoot exists?
