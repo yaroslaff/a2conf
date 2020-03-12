@@ -170,7 +170,7 @@ def is_local_ip(hostname, local_ip_list, report):
         else:
             report.problem('{} ({}) not local {}'.format(hostname, ip, local_ip_list))
 
-def get_vhost(domain, apacheconf):
+def yield_vhost(domain, apacheconf):
     root = a2conf.Node()
     root.read_file(apacheconf)
 
@@ -222,7 +222,7 @@ def process_file(leconf_path, local_ip_list, args, leconf=None):
             le_droot = lc.get_droot(domain)
 
             is_local_ip(domain, local_ip_list, report)
-            vhost_list = list(get_vhost_list(domain, args.apacheconf))
+            vhost_list = list(yield_vhost(domain, args.apacheconf))
 
             if not vhost_list:
                 report.problem('Not found domain {} in {}'.format(domain, args.apacheconf))
