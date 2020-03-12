@@ -15,7 +15,7 @@ class FatalError(Exception):
     pass
 
 class LetsEncryptCertificateConfig:
-    def __init__(self, path, webroot, domains):
+    def __init__(self, path, webroot=None, domains=None):
         self.content = dict()
         if webroot:
             self.init_webroot(webroot, domains)
@@ -175,7 +175,7 @@ def yield_vhost(domain, apacheconf):
     root.read_file(apacheconf)
 
     for vhost in root.children('<VirtualHost>'):
-        if not '80' in vhost.args:
+        if '80' not in vhost.args:
             # log.debug('Skip vhost {}:{} (no 80 in {})'.format(vhost.path, vhost.line, vhost.args))
             continue
         try:
@@ -187,7 +187,7 @@ def yield_vhost(domain, apacheconf):
         if domain.lower() == servername.lower():
             # return vhost
             yield vhost
-
+p
         for alias in vhost.children('serveralias'):
             if domain.lower() in map(str.lower, alias.args.split(' ')):
                 # return vhost
