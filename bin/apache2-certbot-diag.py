@@ -257,7 +257,7 @@ def process_file(leconf_path, local_ip_list, args, leconf=None):
                 raise FatalError
             else:
                 if droot is not None and os.path.isdir(droot):
-                    report.info("DocumentRoot: {}".format(droot))
+                    report.info("DocumentRoot: {}".format(droot), object=domain)
                 else:
                     report.problem("DocumentRoot dir not exists: {} (problem!)".format(droot))
 
