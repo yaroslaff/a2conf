@@ -365,11 +365,12 @@ def main():
     elif os.path.isdir(args.lepath):
         for f in os.listdir(args.lepath):
             path = os.path.join(args.lepath, f)
-            if not (os.path.isfile(path) or os.path.islink(path) or path.endswith('.conf')):
+            if not path.endswith('.conf'):
+                continue
+            if not (os.path.isfile(path) or os.path.islink(path)):
                 continue
             process_file(leconf_path=path, local_ip_list=local_ip_list, args=args)
     else:
         process_file(leconf_path=args.lepath, local_ip_list=local_ip_list, args=args)
-
 
 main()
