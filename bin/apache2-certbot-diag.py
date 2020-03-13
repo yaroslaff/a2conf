@@ -99,7 +99,7 @@ class Report:
         if self._info:
             print("Info:")
             for msg, objects in self.objects.items():
-                print("{}: {}".format(', '.joint(objects), msg))
+                print("{}: {}".format(', '.join(objects), msg))
 
             for msg in self._info:
                 print(self.prefix + msg)
