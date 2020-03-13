@@ -73,9 +73,16 @@ class Report:
         self._info = list()
         self._problem = list()
         self.prefix = ' ' * 4
+        self.objects = dict()
 
-    def info(self, msg):
-        self._info.append(msg)
+    def info(self, msg, object=None):
+        if object:
+            if msg not in self.objects:
+                self.objects[msg] = list()
+            self.objects[msg].append(object)
+        else:
+            self._info.append(msg)
+
 
     def problem(self, msg):
         self._problem.append(msg)
@@ -91,6 +98,9 @@ class Report:
 
         if self._info:
             print("Info:")
+            for msg, objects in self.objects.items():
+                print("{}: {}".format(', '.joint(objects), msg))
+
             for msg in self._info:
                 print(self.prefix + msg)
 
@@ -234,6 +244,7 @@ def process_file(leconf_path, local_ip_list, args, leconf=None):
 
             vhost = vhost_list[0]
 
+            report.info('Vhost: {}:{}'.format(vhost.path, vhost.line), object=domain)
 
             #
             # DocumentRoot exists?
