@@ -8,6 +8,8 @@ import os
 import socket
 import random
 import string
+import sys
+import subprocess
 
 log = None
 
@@ -180,6 +182,21 @@ def is_local_ip(hostname, local_ip_list, report):
         else:
             report.problem('{} ({}) not local {}'.format(hostname, ip, local_ip_list))
 
+def get_all_hostnames(hostname, apacheconf):
+    names = list()
+    vhost = next(yield_vhost(hostname, apacheconf))
+    servername = next(vhost.children('ServerName')).args
+    names.append(servername)
+    for alias in vhost.children('ServerAlias'):
+        names.extend(alias.args.split(' '))
+    return names
+
+
+def get_webroot(hostname, apacheconf):
+    vhost = next(yield_vhost(hostname, apacheconf))
+    return next(vhost.children('DocumentRoot')).args
+
+
 def yield_vhost(domain, apacheconf):
     root = a2conf.Node()
     root.read_file(apacheconf)
@@ -321,8 +338,18 @@ def main():
     def_file = '/etc/apache2/apache2.conf'
     def_lepath = '/etc/letsencrypt/renewal/'
 
-    parser = argparse.ArgumentParser(description='Apache2 / Certbot misconfiguration diagnostic')
+    epilog = 'Examples:\n' \
+             '# Verify all LetsEncrypt config\n' \
+             '{me}\n\n'.format(me=sys.argv[0])
 
+    epilog += "# Create certificate for example.com and all of it's aliases" \
+        "(www.example.com, example.net, www.example.net)\n" \
+        "{me} --create example.com --aliases\n" \
+        "{me} --create example.com -d www.example.com -d example.net -d www.example.net\n" \
+        "\n".format(me=sys.argv[0])
+
+    parser = argparse.ArgumentParser(description='Apache2 / Certbot misconfiguration diagnostic', epilog=epilog,
+                                     formatter_class=argparse.RawTextHelpFormatter)
 
     g = parser.add_argument_group('Check existent LetsEncrypt verification (if "certbot renew" fails)')
     g.add_argument('--host', default=None, metavar='HOST',
@@ -345,6 +372,12 @@ def main():
                    default=False, help='quiet mode, suppress output for sites without problems')
     g.add_argument('-i', '--ip', nargs='*',
                    help='Default addresses. Autodetect if not specified')
+
+    g = parser.add_argument_group('Generate new certificate (certbot certonly --webroot)')
+    g.add_argument('--create', metavar='HOSTNAME',
+                   help='Create LetsEncrypt certificate (via certbot)')
+    g.add_argument('--aliases', action='store_true',
+                   default=False, help='Included all found aliases in certificate')
 
 
     args = parser.parse_args()
@@ -383,5 +416,27 @@ def main():
             process_file(leconf_path=path, local_ip_list=local_ip_list, args=args)
     else:
         process_file(leconf_path=args.lepath, local_ip_list=local_ip_list, args=args)
+
+    if args.create:
+        name = args.create
+        aliases = list()
+        print("Create cert for {}".format(name))
+        if args.domain:
+            aliases.extend(args.domain)
+
+        if args.aliases:
+            aliases.extend(get_all_hostnames(name, args.apacheconf))
+
+        webroot = get_webroot(name, args.apacheconf)
+
+        # remove main name from aliases
+        if name in aliases:
+            aliases.remove(name)
+
+        cmd = ['certbot', 'certonly', '--webroot', '-w', webroot, '-d', name]
+        for alias in aliases:
+            cmd.extend(['-d', alias])
+        print("RUNNING: {}".format(' '.join(cmd)))
+        subprocess.run(cmd)
 
 main()
