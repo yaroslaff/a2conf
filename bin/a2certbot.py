@@ -406,18 +406,7 @@ def main():
         lc = LetsEncryptCertificateConfig(path=None, webroot=args.webroot, domains=args.domain)
         process_file(leconf_path=None, local_ip_list=local_ip_list, args=args, leconf=lc)
 
-    elif os.path.isdir(args.lepath):
-        for f in os.listdir(args.lepath):
-            path = os.path.join(args.lepath, f)
-            if not path.endswith('.conf'):
-                continue
-            if not (os.path.isfile(path) or os.path.islink(path)):
-                continue
-            process_file(leconf_path=path, local_ip_list=local_ip_list, args=args)
-    else:
-        process_file(leconf_path=args.lepath, local_ip_list=local_ip_list, args=args)
-
-    if args.create:
+    elif args.create:
         name = args.create
         aliases = list()
         print("Create cert for {}".format(name))
@@ -438,5 +427,17 @@ def main():
             cmd.extend(['-d', alias])
         print("RUNNING: {}".format(' '.join(cmd)))
         subprocess.run(cmd)
+
+    elif os.path.isdir(args.lepath):
+        for f in os.listdir(args.lepath):
+            path = os.path.join(args.lepath, f)
+            if not path.endswith('.conf'):
+                continue
+            if not (os.path.isfile(path) or os.path.islink(path)):
+                continue
+            process_file(leconf_path=path, local_ip_list=local_ip_list, args=args)
+    else:
+        process_file(leconf_path=args.lepath, local_ip_list=local_ip_list, args=args)
+
 
 main()
