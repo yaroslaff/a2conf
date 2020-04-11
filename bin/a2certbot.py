@@ -376,7 +376,7 @@ def main():
                    help='Lets Encrypt directory def: {}'.format(def_lepath))
 
     g = parser.add_argument_group('Check non-existent LetsEncrypt verification (if "certbot certonly --webroot" fails)')
-    g.add_argument('--prepare', default=False, action='store_true',
+    g.add_argument('--prepare', metavar='HOSTNAME',
                    help='Preparation check (before requesting LetsEncrypt cert). '
                         'You may also use --aliases option')
     g.add_argument('-w', '--webroot', help='DocumentRoot for new website')
@@ -423,8 +423,8 @@ def main():
     log.debug("my IP list: {}".format(local_ip_list))
 
 
-    if args.prepare and args.domain:
-        aliases = get_aliases(None, args.domain, args.apacheconf) if args.aliases else list()
+    if args.prepare:
+        aliases = get_aliases(args.prepare, args.domain, args.apacheconf) if args.aliases else [args.prepare]
         webroot = args.webroot or get_webroot(args.domain[0], args.apacheconf)
         lc = LetsEncryptCertificateConfig(path=None, webroot=webroot, domains=aliases)
         process_file(leconf_path=None, local_ip_list=local_ip_list, args=args, leconf=lc)
