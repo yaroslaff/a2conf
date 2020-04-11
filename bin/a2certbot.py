@@ -165,7 +165,7 @@ def simulate_check(servername, droot, report):
                 test_url, r.status_code, droot))
         else:
             if r.text == test_data:
-                report.info("Simulated check match root: {} url: {}".format(droot, test_url))
+                report.info("Simulated check match root: {} url: {}".format(droot, test_url, object=servername))
                 success = True
             else:
                 report.problem("Simulated check fails root: {} url: {}".format(droot, test_url))
@@ -224,7 +224,6 @@ def yield_vhost(domain, apacheconf):
 
 def process_file(leconf_path, local_ip_list, args, leconf=None):
 
-    docroot_verified = list()
     report = Report(leconf_path or 'internal')
 
     try:
@@ -301,21 +300,15 @@ def process_file(leconf_path, local_ip_list, args, leconf=None):
                 else:
                     report.problem(
                         'DocRoot mismatch for {}. Apache: {} LetsEncrypt: {}'.format(domain, droot, le_droot))
-                if droot not in docroot_verified:
-                    if simulate_check(domain.lower(), droot, report):
-                        docroot_verified.append(droot)
+                    simulate_check(domain.lower(), droot, report)
             else:
                 # AltRoot
                 if os.path.realpath(le_droot) == os.path.realpath(args.altroot):
                     report.info('Domain name {} le root {} matches --altroot'.format(domain, le_droot))
-                    if droot not in docroot_verified:
-                        if simulate_check(domain.lower(), le_droot, report):
-                            docroot_verified.append(droot)
+                    simulate_check(domain.lower(), le_droot, report)
                 elif os.path.realpath(le_droot) == os.path.realpath(droot):
                     report.info('Domain name {} le root {} matches DocumentRoot'.format(domain, le_droot))
-                    if droot not in docroot_verified:
-                        if simulate_check(domain.lower(), droot, report):
-                            docroot_verified.append(droot)
+                    simulate_check(domain.lower(), droot, report)
                 else:
                     report.problem(
                         'DocRoot mismatch for {}. AltRoot: {} LetsEncrypt: {} Apache: {}'.format(
