@@ -340,7 +340,7 @@ def get_aliases(names, apacheconf):
     :return:
     """
 
-    alises = list(names)
+    aliases = list(names)
     aliases.extend(get_all_hostnames(names[0], apacheconf))
 
     return set(aliases)
