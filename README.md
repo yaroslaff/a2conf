@@ -152,19 +152,21 @@ IMPORTANT NOTES:
 ~~~
 
 ## a2okerr.py
-a2okerr.py is useful only if you are using [okerr](https://gitlab.com/yaroslaff/okerr-dev/): free and open source hybrid (host/network) monitoring system. 
-[Okerr official website](https://okerr.com/)). It's like [nagios](https://ww.nagios.org/) 
-or [zabbix](https://www.zabbix.com/), but can run network checks from remote locations, has tiny and optional local 
-client  which can run from cron, has powerful logical
-indicators, public status pages (like https://status.io/ but free), fault-tolerant sites (okerr will 
-redirect dynamic DNS record to live backup site if main site will be dead) and many other features. 
-You can check health of your servers/sites from smartphone via [Telegram](https://telegram.org/).
-You can use it as free service (like wordpress or gmail) without installing okerr server.
+a2okerr.py is useful only if you are using [okerr](https://okerr.com/): free and open source hybrid (host/network) monitoring system. 
+
+[Okerr](https://okerr.com/) is like [nagios](https://www.nagios.org/) or [zabbix](https://www.zabbix.com/), but can perform network checks 
+from remote locations, has tiny and optional local client  which can run from cron, has powerful logical
+indicators (notify me if more then 2 servers are dead, notify me if problems not fixed for more then 2 hours, ...), 
+public status pages (like https://status.io/ but free), fault-tolerant sites (okerr will redirect dynamic DNS record to live backup site if main site will be dead) and many other features. 
+You can check health of your servers/sites from smartphone via [Telegram](https://telegram.org/). 
+
+You can use it as free service (like wordpress or gmail) or you can install server-part on your own server from 
+[okerr git repository](https://gitlab.com/yaroslaff/okerr-dev/).
 
 You will need to install [okerrupdate](https://gitlab.com/yaroslaff/okerrupdate) package to use a2okerr.py: `pip3 install okerrupdate`.
 
-a2okerr.py discovers all https sites in apache and creates SSL-check indicator in okerr. You will be alerted if 
-any of your https sites has any problem (certificate not updated in time for any reason and will expire soon or already 
+a2okerr.py discovers all https sites in apache and creates SSL-indicator in your okerr project. You will get alert to email and/or telegram 
+if any of your https sites has any problem (certificate not updated in time for any reason and will expire soon or already 
 expired. Website unavailable for any reason). If you have linux server or website - you need okerr.
 
 ~~~shell
