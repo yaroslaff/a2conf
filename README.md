@@ -3,8 +3,22 @@ a2conf is utility and python module to work with apache2 config files.
 For all examples we will use file [example.conf](https://gitlab.com/yaroslaff/a2conf/raw/master/examples/example.conf)
 which is available `examples/example.conf`. Use `export PYTHONPATH=.` to use module if it's not installed.
 
-# a2conf.py utility
-## Examples
+# Installation
+Usual simple way:
+~~~
+pip3 install a2conf
+~~~
+
+or get sources from git repo:
+~~~
+git clone https://gitlab.com/yaroslaff/a2conf.git
+~~~
+If using git sources (without installing), work from root dir of repo and do `export PYTONPATH=.`
+
+
+# CLI utilities
+## a2conf.py utility
+### Examples
 Just smart grep
 ~~~shell
 $ bin/a2conf examples/example.conf --cmd ServerName ServerAlias
@@ -59,6 +73,76 @@ $ bin/a2conf examples/example.conf --vhost '{servername} {sslcertificatefile}' -
 example.com /etc/letsencrypt/live/example.com/fullchain.pem
 ~~~
 You can get list of all available tokens for `--vhost` option in verbose mode (`-v` option).
+
+## a2certbot.py
+a2certbot.py utility used to quickly detect common LetsEncrypt configuration errors such as different document root 
+between apache virtualhsot config and letsencrypt certificate config, wrong RewriteRule or Redirect, or changed/missing 
+DNS records. Also, a2certbot.py can generate LetsEncrypt certificates more easily then certbot.
+
+a2certbot.py does not calls LetsEncrypt servers for verification, so if you will use a2certbot.py to verify your 
+configuration, you will not hit [failed validation limit](https://letsencrypt.org/docs/rate-limits/) 
+(*5 failures per account, per hostname, per hour* at moment) and will not be blacklisted on LetsEncrypt site.
+
+Before requesting new certificates:
+~~~shell
+# Verify configuration for website for which you want to request certificate for first time.
+root@bravo:/home/xenon# a2certbot.py -d static.okerr.com -w /var/www/virtual/static.okerr.com/
+=== internal ===
+Info:
+    (static.okerr.com) Vhost: /etc/apache2/sites-enabled/static.okerr.com.conf:1
+    (static.okerr.com) DocumentRoot: /var/www/virtual/static.okerr.com/
+    static.okerr.com is local 37.59.102.26
+    DocumentRoot /var/www/virtual/static.okerr.com/ matches LetsEncrypt and Apache
+    Simulated check match root: /var/www/virtual/static.okerr.com/ url: http://static.okerr.com/.well-known/acme-challenge/certbot_diag_Ru87JIA5p3
+---
+~~~
+
+If `certbot renew` fails:
+~~~shell
+# Check (verify) ALL existing LetsEncrypt certificates (to check why 'certbot renew' may fail ):
+root@bravo:/home/xenon# a2certbot.py 
+=== /etc/letsencrypt/renewal/bravo.okerr.com.conf PROBLEM ===
+Info:
+    (bravo.okerr.com) Vhost: /etc/apache2/sites-enabled/okerr.conf:17
+    LetsEncrypt conf file: /etc/letsencrypt/renewal/bravo.okerr.com.conf
+    bravo.okerr.com is local 37.59.102.26
+Problems:
+    No DocumentRoot in vhost at /etc/apache2/sites-enabled/okerr.conf:17
+---
+
+# Verify only one certificate 
+root@bravo:/home/xenon# a2certbot.py --host bravo.okerr.com
+=== /etc/letsencrypt/renewal/bravo.okerr.com.conf PROBLEM ===
+Info:
+    (bravo.okerr.com) Vhost: /etc/apache2/sites-enabled/okerr.conf:17
+    LetsEncrypt conf file: /etc/letsencrypt/renewal/bravo.okerr.com.conf
+    bravo.okerr.com is local 37.59.102.26
+Problems:
+    No DocumentRoot in vhost at /etc/apache2/sites-enabled/okerr.conf:17
+---
+~~~
+
+a2certbot.py can generate letsencrypt certificates in simple way (automatically detecting all aliases and 
+DocumentRoot):
+~~~
+root@bravo:/home/xenon# a2certbot.py --create static.okerr.com --aliases
+Create cert for static.okerr.com
+RUNNING: certbot certonly --webroot -w /var/www/virtual/static.okerr.com/ -d static.okerr.com -d static2.okerr.com
+Saving debug log to /var/log/letsencrypt/letsencrypt.log
+Plugins selected: Authenticator webroot, Installer None
+Obtaining a new certificate
+Performing the following challenges:
+http-01 challenge for static2.okerr.com
+Using the webroot path /var/www/virtual/static.okerr.com for all unmatched domains.
+Waiting for verification...
+Cleaning up challenges
+
+IMPORTANT NOTES:
+ - Congratulations! Your certificate and chain have been saved at:
+...
+~~~
+
+## 
 
 # Node class
 
