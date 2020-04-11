@@ -85,7 +85,6 @@ class Report:
         else:
             self._info.append(msg)
 
-
     def problem(self, msg):
         self._problem.append(msg)
 
@@ -165,7 +164,7 @@ def simulate_check(servername, droot, report):
                 test_url, r.status_code, droot))
         else:
             if r.text == test_data:
-                report.info("Simulated check match root: {} url: {}".format(droot, test_url, object=servername))
+                report.info("Simulated check match root: {}".format(droot, test_url, object=servername))
                 success = True
             else:
                 report.problem("Simulated check fails root: {} url: {}".format(droot, test_url))
