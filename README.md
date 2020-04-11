@@ -176,14 +176,15 @@ a2okerr.py is useful only if you are using [okerr](https://okerr.com/): free and
 
 [Okerr](https://okerr.com/) is like [nagios](https://www.nagios.org/) or [zabbix](https://www.zabbix.com/), but can perform network checks 
 from remote locations, has tiny and optional local client  which can run from cron, has powerful logical
-indicators (notify me if more then 2 servers are dead, notify me if problems not fixed for more then 2 hours, ...), 
-public status pages (like https://status.io/ but free), fault-tolerant sites (okerr will redirect dynamic DNS record to live backup site if main site will be dead) and many other features. 
-You can check health of your servers/sites from smartphone via [Telegram](https://telegram.org/). 
+indicators (notify me only if more then 2 servers are dead, notify me if any problem is not fixed for more then 30 minutes, ...), 
+public status pages (like https://status.io/ but free), fault-tolerant sites 
+(okerr will redirect dynamic DNS record to backup server if main server is dead, and point it back to main server
+ when it's OK), supports [Telegram](https://telegram.org/) and has many other nice features. 
+ 
+You can use it as free service (like wordpress or gmail) or you can install okerr server on your own linux machine 
+from  [okerr git repository](https://gitlab.com/yaroslaff/okerr-dev/).
 
-You can use it as free service (like wordpress or gmail) or you can install server-part on your own server from 
-[okerr git repository](https://gitlab.com/yaroslaff/okerr-dev/).
-
-You will need to install [okerrupdate](https://gitlab.com/yaroslaff/okerrupdate) package to use a2okerr.py: `pip3 install okerrupdate`.
+You will need to install small [okerrupdate](https://gitlab.com/yaroslaff/okerrupdate) package to use a2okerr.py: `pip3 install okerrupdate`.
 
 a2okerr.py discovers all https sites in apache and creates SSL-indicator in your okerr project. You will get alert to email and/or telegram 
 if any of your https sites has any problem (certificate not updated in time for any reason and will expire soon or already 
