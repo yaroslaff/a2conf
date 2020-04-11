@@ -75,8 +75,8 @@ example.com /etc/letsencrypt/live/example.com/fullchain.pem
 You can get list of all available tokens for `--vhost` option in verbose mode (`-v` option).
 
 ## a2certbot.py
-a2certbot.py utility used to quickly detect common LetsEncrypt configuration errors such as:
-- Different DocumentRoot in vhost and letsencrypt (e.g. if someone moved site)
+a2certbot.py utility used to quickly detect common [LetsEncrypt](https://letsencrypt.org/) configuration errors such as:
+- DocumentRoot mismatch between VirtualHost and LetsEncrypt renew config file (e.g. if someone moved site content)
 - RewriteRule or Redirect apache directives preventing verification
 - DNS record points to other host or not exists at all
 - And **ANY OTHER** problem (such as using wrong certificate path in apache or whatever). a2certbot.py 
@@ -150,6 +150,26 @@ IMPORTANT NOTES:
  - Congratulations! Your certificate and chain have been saved at:
 ...
 ~~~
+
+### a2certbot.py warnings (false positives)
+a2certbot.py expects that requests to .well-known directory of HTTP (port 80) virtualhost must not be redirected.
+If you have redirection like this: `Redirect 301 / https://example.com/` it will report problem:
+~~~
+Problems:
+    Requests will be redirected: Redirect 301 / https://www.example.com/
+~~~
+
+Actually, this could be OK (false positive) and real verification from `certbot renew` may pass (if https 
+site has same  DocumentRoot). To see if this is real problem or not see result for 'Simulated check'. 
+If simulated check matches - website will pass certbot verification. 
+
+To avoid such false positive, do not use such 'blind' redirection, better use this:
+~~~
+      RewriteCond %{REQUEST_URI} !^/\.well\-known        
+      RewriteRule (.*) https://%{SERVER_NAME}$1 [R=301,L]
+~~~
+This code in `<VirtuaHost *:80>` context will redirect all requests to HTTPS site EXCEPT LetsEncrypt verification 
+requests.
 
 ## a2okerr.py
 a2okerr.py is useful only if you are using [okerr](https://okerr.com/): free and open source hybrid (host/network) monitoring system. 
