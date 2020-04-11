@@ -178,7 +178,7 @@ def is_local_ip(hostname, local_ip_list, report):
     iplist = resolve(hostname)
     for ip in iplist:
         if ip in local_ip_list:
-            report.info('{} is local {}'.format(hostname, ip))
+            report.info('is local {}'.format(ip), object=hostname)
         else:
             report.problem('{} ({}) not local {}'.format(hostname, ip, local_ip_list))
 
