@@ -423,12 +423,18 @@ def main():
 
 
     if args.prepare:
+        if not args.domain:
+            print("--prepare requires at least one -d and optional --aliases")
+            sys.exit(1)
         aliases = get_aliases(args.domain, args.apacheconf) if args.aliases else args.domain
         webroot = args.webroot or get_webroot(args.domain[0], args.apacheconf)
         lc = LetsEncryptCertificateConfig(path=None, webroot=webroot, domains=aliases)
         process_file(leconf_path=None, local_ip_list=local_ip_list, args=args, leconf=lc)
 
     elif args.create:
+        if not args.domain:
+            print("--domain requires at least one -d and optional --aliases")
+            sys.exit(1)
         name = args.domain[0]
         print("Create cert for {}".format(name))
         aliases = get_aliases(args.domain, args.apacheconf) if args.aliases else list()
