@@ -321,6 +321,8 @@ def process_file(leconf_path, local_ip_list, args, leconf=None):
                         'DocRoot mismatch for {}. AltRoot: {} LetsEncrypt: {} Apache: {}'.format(
                             domain, args.altroot, le_droot, droot))
 
+            log.debug("END OF ITER for {}".format(domain))
+
     except FatalError:
         pass
     # END OF FINISHED PART
