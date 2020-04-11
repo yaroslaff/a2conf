@@ -186,9 +186,10 @@ from  [okerr git repository](https://gitlab.com/yaroslaff/okerr-dev/).
 
 You will need to install small [okerrupdate](https://gitlab.com/yaroslaff/okerrupdate) package to use a2okerr.py: `pip3 install okerrupdate`.
 
-a2okerr.py discovers all https sites in apache and creates SSL-indicator in your okerr project. You will get alert to email and/or telegram 
-if any of your https sites has any problem (certificate not updated in time for any reason and will expire soon or already 
-expired. Website unavailable for any reason). If you have linux server or website - you need okerr.
+a2okerr.py discovers all https sites from apache config and creates SSL-indicator in your okerr project 
+for each website. You will get alert message to email and/or telegram if any of your https sites has any problem 
+(certificate is not updated in time for any reason and will expire soon or already expired. 
+Website unavailable for any reason). If you have linux server or website - you need okerr.
 
 ~~~shell
 # Create indicator for all local https websites. If indicator already exists, HTTP error 400 will be received - this is OK.
