@@ -332,20 +332,16 @@ def process_file(leconf_path, local_ip_list, args, leconf=None):
 
     return
 
-def get_aliases(main_name, names, apacheconf):
+def get_aliases(names, apacheconf):
     """
     gets all aliases from both 'names' and get_all_hostnames
-    :param main_name: any main name of site
     :param names: any alises to append
     :param apacheconf: apache config file name
     :return:
     """
-    # prepare aliases
-    aliases = list()
-    if names:
-        aliases.extend(names)
 
-    aliases.extend(get_all_hostnames(main_name or names[0], apacheconf))
+    alises = list(names)
+    aliases.extend(get_all_hostnames(names[0], apacheconf))
 
     return set(aliases)
 
@@ -360,10 +356,18 @@ def main():
              '# Verify all LetsEncrypt config\n' \
              '{me}\n\n'.format(me=sys.argv[0])
 
+    epilog += "# Verify one LetsEncrypt certificate:\n " \
+              "{me} --name example.com\n\n".format(me=sys.argv[0])
+
+    epilog += "# Verify if cert could be requested (preparation). Existing certificate not needed (all manual):\n" \
+              "{me} --prepare -d example.com -d www.example.com -w /var/www/virtual/example.com\n" \
+              "# Or much more simpler (aliases and webroot will be guessed from apache config):\n" \
+              "{me} --prepare -d example.com --aliases"
+
     epilog += "# Create certificate for example.com and all of it's aliases" \
         "(www.example.com, example.net, www.example.net)\n" \
-        "{me} --create example.com --aliases\n" \
-        "{me} --create example.com -d www.example.com -d example.net -d www.example.net\n" \
+        "{me} --create -d example.com --aliases\n" \
+        "{me} --create -d example.com -d www.example.com -d example.net -d www.example.net\n" \
         "\n".format(me=sys.argv[0])
 
     parser = argparse.ArgumentParser(description='Apache2 / Certbot misconfiguration diagnostic', epilog=epilog,
@@ -376,7 +380,7 @@ def main():
                    help='Lets Encrypt directory def: {}'.format(def_lepath))
 
     g = parser.add_argument_group('Check non-existent LetsEncrypt verification (if "certbot certonly --webroot" fails)')
-    g.add_argument('--prepare', metavar='HOSTNAME',
+    g.add_argument('--prepare', default=False, action='store_true',
                    help='Preparation check (before requesting LetsEncrypt cert). '
                         'You may also use --aliases option')
     g.add_argument('-w', '--webroot', help='DocumentRoot for new website')
@@ -395,10 +399,10 @@ def main():
                    help='Default addresses. Autodetect if not specified')
 
     g = parser.add_argument_group('Generate new certificate (certbot certonly --webroot)')
-    g.add_argument('--create', metavar='HOSTNAME',
-                   help='Create LetsEncrypt certificate (via certbot)')
+    g.add_argument('--create', default=False, action='store_true',
+                   help='Create LetsEncrypt certificate (via certbot). use -d and --aliases')
     g.add_argument('--aliases', action='store_true',
-                   default=False, help='Included all found aliases in certificate')
+                   default=False, help='Include all ServerName and ServerAlias found in VirtualHost')
 
 
     args = parser.parse_args()
@@ -424,15 +428,15 @@ def main():
 
 
     if args.prepare:
-        aliases = get_aliases(args.prepare, args.domain, args.apacheconf) if args.aliases else [args.prepare]
-        webroot = args.webroot or get_webroot(args.domain[0], args.apacheconf)
+        aliases = get_aliases(args.domain, args.apacheconf) if args.aliases else args.domain
+        webroot = args.webroot or get_webroot(args.prepare, args.apacheconf)
         lc = LetsEncryptCertificateConfig(path=None, webroot=webroot, domains=aliases)
         process_file(leconf_path=None, local_ip_list=local_ip_list, args=args, leconf=lc)
 
     elif args.create:
-        name = args.create
+        name = args.domain[0]
         print("Create cert for {}".format(name))
-        aliases = get_aliases(name, args.domain, args.apacheconf) if args.aliases else list()
+        aliases = get_aliases(args.domain, args.apacheconf) if args.aliases else list()
         webroot = get_webroot(name, args.apacheconf)
 
         # remove main name from aliases
