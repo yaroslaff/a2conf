@@ -296,7 +296,7 @@ def process_file(leconf_path, local_ip_list, args, leconf=None):
             if not args.altroot:
                 # No altroot, simple check
                 if os.path.realpath(le_droot) == os.path.realpath(droot):
-                    report.info('DocumentRoot {} matches LetsEncrypt and Apache'.format(droot))
+                    report.info('DocumentRoot {} matches LetsEncrypt and Apache'.format(droot), object=domain)
                 else:
                     report.problem(
                         'DocRoot mismatch for {}. Apache: {} LetsEncrypt: {}'.format(domain, droot, le_droot))
