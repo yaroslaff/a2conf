@@ -97,7 +97,7 @@ class Report:
         else:
             print("=== {} ===".format(self.name))
 
-        if self._info:
+        if self._info or self.objects:
             print("Info:")
             for msg, objects in self.objects.items():
                 print("{}({}) {}".format(self.prefix, ', '.join(objects), msg))
@@ -223,7 +223,7 @@ def yield_vhost(domain, apacheconf):
 
 def process_file(leconf_path, local_ip_list, args, leconf=None):
 
-    report = Report(leconf_path or 'internal')
+    report = Report(leconf_path or 'manual')
 
     try:
 
@@ -243,7 +243,7 @@ def process_file(leconf_path, local_ip_list, args, leconf=None):
 
         # Local IP check
         for domain in lc.domains:
-            log.debug("check domain {} from {}".format(domain, leconf_path))
+            log.debug("check domain {} from {}".format(domain, leconf_path or 'manual'))
             le_droot = lc.get_droot(domain)
 
             is_local_ip(domain, local_ip_list, report)
