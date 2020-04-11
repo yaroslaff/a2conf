@@ -75,9 +75,12 @@ example.com /etc/letsencrypt/live/example.com/fullchain.pem
 You can get list of all available tokens for `--vhost` option in verbose mode (`-v` option).
 
 ## a2certbot.py
-a2certbot.py utility used to quickly detect common LetsEncrypt configuration errors such as different document root 
-between apache virtualhsot config and letsencrypt certificate config, wrong RewriteRule or Redirect, or changed/missing 
-DNS records. Also, a2certbot.py can generate LetsEncrypt certificates more easily then certbot.
+a2certbot.py utility used to quickly detect common LetsEncrypt configuration errors such as:
+- Different DocumentRoot in vhost and letsencrypt (e.g. if someone moved site)
+- RewriteRule or Redirect apache directives preventing verification
+- DNS record points to other host or not exists at all
+- And **ANY OTHER** problem (such as using wrong certificate path in apache or whatever). a2certbot.py 
+simulates HTTP verification (If LetsEncrypt verification fails, a2certbot will fail too, and vice versa).
 
 a2certbot.py does not calls LetsEncrypt servers for verification, so if you will use a2certbot.py to verify your 
 configuration, you will not hit [failed validation limit](https://letsencrypt.org/docs/rate-limits/) 
@@ -86,15 +89,21 @@ configuration, you will not hit [failed validation limit](https://letsencrypt.or
 Before requesting new certificates:
 ~~~shell
 # Verify configuration for website for which you want to request certificate for first time.
-root@bravo:/home/xenon# a2certbot.py -d static.okerr.com -w /var/www/virtual/static.okerr.com/
-=== internal ===
+bin/a2certbot.py --prepare -w /var/www/virtual/static.okerr.com/ -d static.okerr.com
+=== manual ===
 Info:
+    (static.okerr.com) is local 37.59.102.26
     (static.okerr.com) Vhost: /etc/apache2/sites-enabled/static.okerr.com.conf:1
     (static.okerr.com) DocumentRoot: /var/www/virtual/static.okerr.com/
-    static.okerr.com is local 37.59.102.26
-    DocumentRoot /var/www/virtual/static.okerr.com/ matches LetsEncrypt and Apache
-    Simulated check match root: /var/www/virtual/static.okerr.com/ url: http://static.okerr.com/.well-known/acme-challenge/certbot_diag_Ru87JIA5p3
+    (static.okerr.com) DocumentRoot /var/www/virtual/static.okerr.com/ matches LetsEncrypt and Apache
+    (static.okerr.com) Simulated check match root: /var/www/virtual/static.okerr.com/
 ---
+
+# You can verify all hostnames for site
+bin/a2certbot.py --prepare -w /var/www/virtual/static.okerr.com/ -d static.okerr.com -d static2.okerr.com
+
+# ... and finally simple main all-in-one command, it guesses aliases and root (command below does same as command above):
+bin/a2certbot.py --prepare -d static.okerr.com --aliases
 ~~~
 
 If `certbot renew` fails:
@@ -123,9 +132,9 @@ Problems:
 ~~~
 
 a2certbot.py can generate letsencrypt certificates in simple way (automatically detecting all aliases and 
-DocumentRoot):
+DocumentRoot, but you can use -d instead of --aliases):
 ~~~
-root@bravo:/home/xenon# a2certbot.py --create static.okerr.com --aliases
+root@bravo:/home/xenon# a2certbot.py --create -d static.okerr.com --aliases
 Create cert for static.okerr.com
 RUNNING: certbot certonly --webroot -w /var/www/virtual/static.okerr.com/ -d static.okerr.com -d static2.okerr.com
 Saving debug log to /var/log/letsencrypt/letsencrypt.log
@@ -142,7 +151,32 @@ IMPORTANT NOTES:
 ...
 ~~~
 
-## 
+## a2okerr.py
+a2okerr.py is useful only if you are using [okerr](https://gitlab.com/yaroslaff/okerr-dev/): free and open source hybrid (host/network) monitoring system. 
+[Okerr official website](https://okerr.com/)). It's like [nagios](https://ww.nagios.org/) 
+or [zabbix](https://www.zabbix.com/), but can run network checks from remote locations, has tiny and optional local 
+client  which can run from cron, has powerful logical
+indicators, public status pages (like https://status.io/ but free), fault-tolerant sites (okerr will 
+redirect dynamic DNS record to live backup site if main site will be dead) and many other features. 
+You can check health of your servers/sites from smartphone via [Telegram](https://telegram.org/).
+You can use it as free service (like wordpress or gmail) without installing okerr server.
+
+You will need to install [okerrupdate](https://gitlab.com/yaroslaff/okerrupdate) package to use a2okerr.py: `pip3 install okerrupdate`.
+
+a2okerr.py discovers all https sites in apache and creates SSL-check indicator in okerr. You will be alerted if 
+any of your https sites has any problem (certificate not updated in time for any reason and will expire soon or already 
+expired. Website unavailable for any reason). If you have linux server or website - you need okerr.
+
+~~~shell
+# Create indicator for all local https websites. If indicator already exists, HTTP error 400 will be received - this is OK.
+a2okerr.py
+
+# alter prefix, policy and description
+a2okerr.py --prefix my:prefix: --policy Hourly --desc "I love okerr and a2okerr"
+
+# do not really create indicators, just dry run
+a2oker.py --dry
+~~~
 
 # Node class
 

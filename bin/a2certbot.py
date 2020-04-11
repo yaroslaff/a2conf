@@ -357,7 +357,7 @@ def main():
     epilog += "# Verify if cert could be requested (preparation). Existing certificate not needed (all manual):\n" \
               "{me} --prepare -d example.com -d www.example.com -w /var/www/virtual/example.com\n" \
               "# Or much more simpler (aliases and webroot will be guessed from apache config):\n" \
-              "{me} --prepare -d example.com --aliases"
+              "{me} --prepare -d example.com --aliases\n\n".format(me=sys.argv[0])
 
     epilog += "# Create certificate for example.com and all of it's aliases" \
         "(www.example.com, example.net, www.example.net)\n" \

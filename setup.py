@@ -11,7 +11,7 @@ setup(
     name='a2conf',
     version='0.2.8',
     packages=['a2conf'],
-    scripts=['bin/a2conf', 'bin/apache2okerr.py', 'bin/a2certbot.py'],
+    scripts=['bin/a2conf', 'bin/a2okerr.py', 'bin/a2certbot.py'],
 
     # install_requires=[],
 

@@ -47,7 +47,7 @@ def main():
     def_file = '/etc/apache2/apache2.conf'
     def_dir = None
     def_policy = 'Daily'
-    def_desc = 'Auto-created from a2conf apache2okerr.py'
+    def_desc = 'Auto-created from a2conf a2okerr.py'
 
     parser = argparse.ArgumentParser(description='Bulk-add Apache2 SSL hosts to Okerr monitoring')
 
