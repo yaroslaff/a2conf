@@ -199,7 +199,7 @@ a2okerr.py --prefix my:prefix: --policy Hourly --desc "I love okerr and a2okerr"
 a2oker.py --dry
 ~~~
 
-# Node class
+# a2conf.Node class
 
 ## Properties and methods
 
