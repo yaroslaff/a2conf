@@ -1,4 +1,9 @@
-a2conf is CLI utilities and python module to read/write apache2 config files.
+# a2conf package content
+- `a2conf` - python module to read/write apache2 config files
+- `a2conf` - CLI script to query apache2 config (e.g. get DocumentRoot or get all hostnames for specific VirtualHost)
+- `a2certbot.py` - CLI script to diagnose problems with Apache2 VirtualHost and LetsEncrypt certificates
+- `a2okerr.py` - CLI script to generate indicators for SSL VirtualHosts in [okerr](https://okerr.com/) monitoring system.
+
 
 # Installation
 Usual simple way:
@@ -66,8 +71,8 @@ a2certbot.py utility used to quickly detect common [LetsEncrypt](https://letsenc
 - DocumentRoot mismatch between VirtualHost and LetsEncrypt renew config file (e.g. if someone moved site content)
 - RewriteRule or Redirect apache directives preventing verification
 - DNS record points to other host or not exists at all
-- And **ANY OTHER** problem (such as using wrong certificate path in apache or whatever). a2certbot.py 
-simulates HTTP verification (If LetsEncrypt verification fails, a2certbot will fail too, and vice versa).
+- And **ANY OTHER** problem (such as using wrong certificate path in apache or whatever). `a2certbot.py` 
+simulates HTTP verification (If LetsEncrypt verification fails, `a2certbot.py` will fail too, and vice versa).
 
 a2certbot.py does not calls LetsEncrypt servers for verification, so if you will use a2certbot.py to verify your 
 configuration, you will not hit [failed validation limit](https://letsencrypt.org/docs/rate-limits/) 
