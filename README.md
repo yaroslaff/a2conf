@@ -78,6 +78,8 @@ a2certbot.py does not calls LetsEncrypt servers for verification, so if you will
 configuration, you will not hit [failed validation limit](https://letsencrypt.org/docs/rate-limits/) 
 (*5 failures per account, per hostname, per hour* at moment) and will not be blacklisted on LetsEncrypt site.
 
+### Requesting new certificate and troubleshooting
+
 Before requesting new certificates:
 ~~~shell
 # Verify configuration for website for which you want to request certificate for first time.
@@ -97,6 +99,28 @@ bin/a2certbot.py --prepare -w /var/www/virtual/static.okerr.com/ -d static.okerr
 # ... and finally simple main all-in-one command, it guesses aliases and root (command below does same as command above):
 bin/a2certbot.py --prepare -d static.okerr.com --aliases
 ~~~
+
+a2certbot.py can generate letsencrypt certificates in simple way (automatically detecting all aliases and 
+DocumentRoot, but you can use -d instead of --aliases):
+~~~
+root@bravo:/home/xenon# a2certbot.py --create -d static.okerr.com --aliases
+Create cert for static.okerr.com
+RUNNING: certbot certonly --webroot -w /var/www/virtual/static.okerr.com/ -d static.okerr.com -d static2.okerr.com
+Saving debug log to /var/log/letsencrypt/letsencrypt.log
+Plugins selected: Authenticator webroot, Installer None
+Obtaining a new certificate
+Performing the following challenges:
+http-01 challenge for static2.okerr.com
+Using the webroot path /var/www/virtual/static.okerr.com for all unmatched domains.
+Waiting for verification...
+Cleaning up challenges
+
+IMPORTANT NOTES:
+ - Congratulations! Your certificate and chain have been saved at:
+...
+~~~
+
+### Troubleshooting renew certificates
 
 If `certbot renew` fails:
 ~~~shell
@@ -123,25 +147,6 @@ Problems:
 ---
 ~~~
 
-a2certbot.py can generate letsencrypt certificates in simple way (automatically detecting all aliases and 
-DocumentRoot, but you can use -d instead of --aliases):
-~~~
-root@bravo:/home/xenon# a2certbot.py --create -d static.okerr.com --aliases
-Create cert for static.okerr.com
-RUNNING: certbot certonly --webroot -w /var/www/virtual/static.okerr.com/ -d static.okerr.com -d static2.okerr.com
-Saving debug log to /var/log/letsencrypt/letsencrypt.log
-Plugins selected: Authenticator webroot, Installer None
-Obtaining a new certificate
-Performing the following challenges:
-http-01 challenge for static2.okerr.com
-Using the webroot path /var/www/virtual/static.okerr.com for all unmatched domains.
-Waiting for verification...
-Cleaning up challenges
-
-IMPORTANT NOTES:
- - Congratulations! Your certificate and chain have been saved at:
-...
-~~~
 
 ### a2certbot.py warnings (false positives)
 a2certbot.py expects that requests to .well-known directory of HTTP (port 80) virtualhost must not be redirected.
