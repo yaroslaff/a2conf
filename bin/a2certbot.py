@@ -352,7 +352,7 @@ def main():
              '{me}\n\n'.format(me=sys.argv[0])
 
     epilog += "# Verify one LetsEncrypt certificate:\n " \
-              "{me} --name example.com\n\n".format(me=sys.argv[0])
+              "{me} --host example.com\n\n".format(me=sys.argv[0])
 
     epilog += "# Verify if cert could be requested (preparation). Existing certificate not needed (all manual):\n" \
               "{me} --prepare -d example.com -d www.example.com -w /var/www/virtual/example.com\n" \

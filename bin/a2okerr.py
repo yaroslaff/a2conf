@@ -33,7 +33,7 @@ def process_file(path, args):
                               policy = args.policy,
                               desc = args.desc)
         if args.dry:
-            print(i,'(dry run)')
+            print(i, '(dry run)')
         else:
             print(i)
 
@@ -43,7 +43,7 @@ def process_file(path, args):
 
 def main():
 
-    def_prefix = socket.gethostname()+':ssl:https:'
+    def_prefix = socket.gethostname().split('.')[0]+':ssl:https:'
     def_file = '/etc/apache2/apache2.conf'
     def_dir = None
     def_policy = 'Daily'
