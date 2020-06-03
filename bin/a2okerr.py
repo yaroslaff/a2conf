@@ -29,16 +29,22 @@ def process_file(path, args):
 
         iname = args.prefix + servername
         i = project.indicator(iname,
-                              method = 'sslcert|host={}|port=443|days=20'.format(servername),
-                              policy = args.policy,
-                              desc = args.desc)
+                              method='sslcert|host={}|port=443|days=20'.format(servername),
+                              policy=args.policy,
+                              desc=args.desc)
         if args.dry:
             print(i, '(dry run)')
         else:
             print(i)
 
         if not args.dry:
-            i.update('OK')
+            try:
+                i.update('OK')
+            except okerrupdate.OkerrExc as e:
+                if e.code == 'BAD_METHOD':
+                    print("Already exists")
+                else:
+                    print(e)
 
 
 def main():
@@ -80,5 +86,6 @@ def main():
             process_file(path, args)
     else:
         process_file(args.file, args)
+
 
 main()
