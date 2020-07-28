@@ -9,11 +9,11 @@ class Node(object):
     def __init__(self, read=None, raw=None, parent=None, name=None, suffix=None, path=None, line=None, includes=True):
         self.raw = raw
         self.parent = parent
-        self.content = list() # children
+        self.content = list()  # children
         self.prefix = ' '*4
-        self.section = None # Section e.g. "VirtualHost" or None
-        self.cmd = None # Command, e.g. "ServerName"
-        self.args = None # Args to section (VirtualHost), e.g. "*:80" or
+        self.section = None  # Section e.g. "VirtualHost" or None
+        self.cmd = None  # Command, e.g. "ServerName"
+        self.args = None  # Args to section (VirtualHost), e.g. "*:80" or
         self.suffix = None
         self.last_child = None
         self.includes = includes
@@ -22,7 +22,7 @@ class Node(object):
         self.line = line  # line in file
 
         if self.raw:
-            match = re.search('(#.*)$',self.raw)
+            match = re.search('(#.*)$', self.raw)
             if match:
                 self.suffix = match.group(0)
             else:
@@ -87,8 +87,30 @@ class Node(object):
         """ Append child to node """
         if self.content is None:
             self.content = list()
+
+        if isinstance(child, str):
+            child = Node(raw=child)
         self.content.append(child)
         self.last_child = child
+
+    def insert(self, child, after=None):
+        if not self.content:
+            self.add(child)
+            return
+
+        if isinstance(child, str):
+            child = Node(raw=child)
+
+        if self.content[-1].is_close():
+            idx = len(self.content)-1
+        else:
+            idx = len(self.content)
+
+        if after:
+            for i, c in enumerate(self.content):
+                if c.name.lower() == after.lower():
+                    idx = i+1
+        self.content.insert(idx, child)
 
     def add_raw(self, raw):
         sl = Node(raw, parent=self)
@@ -110,7 +132,7 @@ class Node(object):
                 c.filter(regex)
             return not re.match(regex, c.raw, re.IGNORECASE)
 
-        self.content = [ c for c in self.content if ff(regex, c) ]
+        self.content = [c for c in self.content if ff(regex, c)]
 
 
     def children(self, name=None, recursive=False):

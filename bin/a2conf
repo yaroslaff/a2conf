@@ -37,16 +37,16 @@ def vhost_filter(vhost, argsspec, fltr):
 def_file = '/etc/apache2/apache2.conf'
 
 epilog = "# Dump config for example.com\n" \
-         "{me} examples/example.conf --dump --vhost example.com\n\n"
+         "{me} --dump --vhost example.com\n\n"
 
 epilog += "# Show only these commands (try also add --args or --uargs)\n" \
-          "{me} examples/example.conf --cmd ServerName ServerAlias\n\n" \
+          "{me} --cmd ServerName ServerAlias\n\n" \
 
 epilog += "# list vhosts and their DocumentRoot\n"\
-          "{me} examples/example.conf " \
+          "{me} " \
           "--vhfmt '{{vhostargs}} {{servername}} {{documentroot}}'\n\n"
 
-epilog += "# List certificates for all VirtualHosts with 'SSLEngine On'\n" \
+epilog += "# List certificates for all VirtualHosts with 'SSLEngine On' from config file examples/example.conf\n" \
           "{me} examples/example.conf --cmd sslcertificatefile  --filter sslengine on\n\n"
 epilog_str = epilog.format(me=sys.argv[0])
 

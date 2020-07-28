@@ -236,6 +236,17 @@ generator will return nested nodes too (e.g. what is inside `<IfModule>` or `<Di
 
 `write_file(filename)` - opens file for writing and dump() to this file.
 
+`add(child)` - add new child node to content of Node after all other nodes (including possible closing 
+Node `</VirtualHost>`). Child could be node or raw config line.
+
+`insert(child, after)` - smarter then `add()`. Add new child node, place it after last node with name `after`. e.g.:
+~~~
+doc_root = Node(raw='DocumentRoot /var/www/site1')
+vhost.insert(doc_root, after='ServerAlias')
+~~~
+If `after` not specified, or not found, child is inserted before closing 
+
+
 ## Examples
 
 ### Just dump apache config

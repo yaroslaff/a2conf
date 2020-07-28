@@ -56,8 +56,6 @@ def teardown_module(module):
 
 class TestClass:
     def test_children(self):
-        print(123)
-        assert(1==1)
         root = a2conf.Node(files['c1'])
         assert(len(list(root.children('<VirtualHost>'))) == 1)
 
@@ -119,4 +117,22 @@ class TestClass:
         ssl.delete()
 
         assert(root.first('SSLEngine', recursive=True) is None)
+
+    def test_add_root(self):
+        root = a2conf.Node()
+        root.add('Cmd1')
+        root.add('Cmd2')
+        root.insert('Cmd1.5 Option  # in the middle', after='cmd1')
+        root.insert('Cmd3',)
+        assert(root.content[1].name == 'Cmd1.5')
+        assert(root.content[3].name == 'Cmd3')
+
+    def test_add_vhost(self):
+        root = a2conf.Node(files['c1'])
+
+        vhost = root.first('<VirtualHost>')
+        new_node = a2conf.Node(raw='MyTestDirective Option1 Option2')
+        vhost.insert(new_node, after='Serveralias')
+        assert (vhost.first('MyTestDirective') is not None)
+
 
