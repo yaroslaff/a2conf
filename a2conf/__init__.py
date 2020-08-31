@@ -180,7 +180,7 @@ class Node(object):
                 l = l.strip()
                 if not l:
                     continue
-                node = Node(raw=l, parent = parent, path = filename, line = line)
+                node = Node(raw=l, parent=parent, path=filename, line=line)
 
                 if node.is_open():
                     parent.add(node)
@@ -195,6 +195,9 @@ class Node(object):
                     basedir = os.path.dirname(filename)
                     include_files = glob.glob(os.path.join(basedir, node.args))
                     for path in include_files:
+                        if not os.path.isfile(path):
+                            # Not a file, skip
+                            continue
                         sub_node = Node(path)
                         self.extend(sub_node)
                         #self.content.extend(sub_node.content)
