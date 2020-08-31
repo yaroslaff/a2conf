@@ -193,7 +193,12 @@ class Node(object):
 
                 if self.includes and node.name.lower() in ['include', 'includeoptional']:
                     basedir = os.path.dirname(filename)
-                    include_files = glob.glob(os.path.join(basedir, node.args))
+                    target = os.path.join(basedir, node.args)
+                    if os.path.isdir(target):
+                        include_files = [os.path.join(target, f) for f in os.listdir(target)]
+                    else:
+                        # file or glob
+                        include_files = glob.glob(target)
                     for path in include_files:
                         if not os.path.isfile(path):
                             # Not a file, skip
