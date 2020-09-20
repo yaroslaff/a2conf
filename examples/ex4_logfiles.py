@@ -19,7 +19,7 @@ for path in sys.argv[1:]:
             print("# has access log")
         else:
             print("# No access log, add")
-            access_log_cmd = a2conf.Node(raw="CustomLog ${{APACHE_LOG_DIR}}/{}-access.log".format(servername))
+            access_log_cmd = a2conf.Node(raw="CustomLog ${{APACHE_LOG_DIR}}/{}-access.log combined".format(servername))
             vhost.insert(access_log_cmd, after=['servername','serveralias'])
 
         if vhost.first('ErrorLog'):
