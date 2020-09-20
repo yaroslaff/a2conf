@@ -122,8 +122,9 @@ class TestClass:
         root = a2conf.Node()
         root.add('Cmd1')
         root.add('Cmd2')
-        root.insert('Cmd1.5 Option  # in the middle', after='cmd1')
+        root.insert('Cmd1.5 Option  # in the middle', after=['cmd1'])
         root.insert('Cmd3',)
+
         assert(root.content[1].name == 'Cmd1.5')
         assert(root.content[3].name == 'Cmd3')
 
@@ -132,7 +133,7 @@ class TestClass:
 
         vhost = root.first('<VirtualHost>')
         new_node = a2conf.Node(raw='MyTestDirective Option1 Option2')
-        vhost.insert(new_node, after='Serveralias')
+        vhost.insert(new_node, after=['Serveralias'])
         assert (vhost.first('MyTestDirective') is not None)
 
 

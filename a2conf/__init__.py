@@ -94,6 +94,17 @@ class Node(object):
         self.last_child = child
 
     def insert(self, child, after=None):
+        
+        def get_index(content, after):
+            #
+            # return index of 
+            #
+            idx = None
+            for i, c in enumerate(content):
+                if c.name.lower() == after.lower():
+                    idx = i+1
+            return idx
+
         if not self.content:
             self.add(child)
             return
@@ -107,11 +118,20 @@ class Node(object):
             idx = len(self.content)
 
         if after:
-            for i, c in enumerate(self.content):
-                if c.name.lower() == after.lower():
-                    idx = i+1
-        self.content.insert(idx, child)
+            for after_item in reversed(after):
+                idx = get_index(self.content, after_item)
+                if idx:
+                    self.content.insert(idx, child)
+                    return
+        
+        # add to end
+        idx = len(self.content)-1
 
+        if not self.content[idx].is_close():
+            idx+=1
+        self.content.insert(idx, child)
+ 
+ 
     def add_raw(self, raw):
         sl = Node(raw, parent=self)
         self.add(sl)
@@ -178,9 +198,11 @@ class Node(object):
             for l in fh.readlines():
                 line += 1
                 l = l.strip()
-                if not l:
-                    continue
-                node = Node(raw=l, parent=parent, path=filename, line=line)
+
+                if l:
+                  node = Node(raw=l, parent=parent, path=filename, line=line)
+                else:
+                  node = Node(raw=l, parent=parent, path=filename, line=line)
 
                 if node.is_open():
                     parent.add(node)
@@ -255,8 +277,13 @@ class Node(object):
                     d.dump(fh, depth+1)
         else:
             # neither cmd, nor section
-            if self.suffix:
-                print(self.prefix*depth + self.suffix)
+            #if self.suffix:
+            #    fh.write(self.prefix*depth + self.suffix + "\n")
+            #else:
+                # no suffix, just empty line
+            if self.raw is not None:
+                fh.write(self.prefix*depth + self.raw + '\n')
+
             # only root node has cmd=None, section=None but has children
             if self.children:
                 for d in self.content:

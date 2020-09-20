@@ -242,9 +242,12 @@ Node `</VirtualHost>`). Child could be node or raw config line.
 `insert(child, after)` - smarter then `add()`. Add new child node, place it after last node with name `after`. e.g.:
 ~~~
 doc_root = Node(raw='DocumentRoot /var/www/site1')
-vhost.insert(doc_root, after='ServerAlias')
+vhost.insert(doc_root, after=['ServerName','ServerAlias'])
 ~~~
-If `after` not specified, or not found, child is inserted before closing 
+If `after` not specified, or not found, child is inserted before closing tag. If specified, method tries to insert new node
+after last found node in `after`. 
+
+In this example, new node will be inserted after `ServerAlias` (if it exists). If not, it will be inserted after `ServerName` (if it exists). And if all commands listed in `after` is not found, node will be inserted as last node, right before closing tag (e.g., right before `</VirtualHost>`).
 
 
 ## Examples
