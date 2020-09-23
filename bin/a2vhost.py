@@ -155,8 +155,7 @@ def make_redirect(apacheconfig, domainlist):
     new_vhost.insert('</VirtualHost>')
 
     root.insert(['', '# auto-generated plain HTTP site for redirect', new_vhost], after=vhost)
-
-    root.dump()
+    root.write_file(root.path)
 
 
 

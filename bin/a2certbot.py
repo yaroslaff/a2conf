@@ -440,10 +440,6 @@ def main():
             print("--domain requires at least one -d and optional --aliases")
             sys.exit(1)
 
-        # Fix apacheconf. If not specified
-        if args.apacheconf == def_apacheconf:
-            sys.exit(1)
-
         name = args.domain[0]
 
         print("Create cert for {}".format(name))
