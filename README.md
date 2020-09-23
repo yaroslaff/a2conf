@@ -1,7 +1,10 @@
+
+[[_TOC_]]
+
 # a2conf package content
 - `a2conf` - python module to read/write apache2 config files
 - `a2conf` - CLI script to query apache2 config (e.g. get DocumentRoot or get all hostnames for specific VirtualHost)
-- `a2certbot.py` - CLI script to diagnose problems with Apache2 VirtualHost and LetsEncrypt certificates
+- `a2certbot.py` - CLI script to diagnose problems with Apache2 VirtualHost and LetsEncrypt certificates and make SSL sites easily
 - `a2okerr.py` - CLI script to generate indicators for SSL VirtualHosts in [okerr](https://okerr.com/) monitoring system.
 
 
@@ -242,8 +245,14 @@ Node `</VirtualHost>`). Child could be node or raw config line.
 `insert(child, after)` - smarter then `add()`. Add new child node, place it after last node with name `after`. e.g.:
 ~~~
 doc_root = Node(raw='DocumentRoot /var/www/site1')
-vhost.insert(doc_root, after=['ServerName','ServerAlias'])
+vhost.insert([doc_root], after=['ServerName','ServerAlias'])
 ~~~
+
+`child` is list of `Node`s to insert. But a2conf is friendly: if you pass single element, it will be converted to list with this element, and then if any element is string, it will be converted to node. So, this command woks well too:
+~~~
+vhost.insert('DocumentRoot /var/www/site1', after=['ServerName','ServerAlias'])
+~~~
+
 If `after` not specified, or not found, child is inserted before closing tag. If specified, method tries to insert new node
 after last found node in `after`. 
 
@@ -368,4 +377,42 @@ $ examples/ex3_replace_delete.py examples/example.conf
     DirectoryIndex index.html index.htm default.htm index.php
     Options -Indexes +FollowSymLinks
 </VirtualHost>
+~~~
+
+### Add directives inside virtualhost
+`examples/ex4_logfiles.py` check files from arguments, for each virtualhost if will add `CustomLog`/`ErrorLog` directives unless it already exists.
+
+~~~python
+#!/usr/bin/env python3
+
+import sys
+import a2conf
+
+for path in sys.argv[1:]:
+    print("FILE", path)
+    root = a2conf.Node(path)
+
+    for vhost in root.children('<VirtualHost>'):
+        servername_cmd = vhost.first('servername')
+        if servername_cmd is None:
+            print("{}:{} No servername, skip".format(vhost.path, vhost.line))
+            continue
+        servername = servername_cmd.args
+        print("{}:{} {}".format(vhost.path, vhost.line, servername))
+
+        if vhost.first('CustomLog'):
+            print("# has access log")
+        else:
+            print("# No access log, add")
+            access_log_cmd = a2conf.Node(raw="CustomLog ${{APACHE_LOG_DIR}}/{}-access.log combined".format(servername))
+            vhost.insert(access_log_cmd, after=['servername','serveralias'])
+
+        if vhost.first('ErrorLog'):
+            print("# has error log")
+        else:
+            print("# No error log, add")
+            error_log_cmd = a2conf.Node(raw="ErrorLog ${{APACHE_LOG_DIR}}/{}-error.log".format(servername))
+            vhost.insert(error_log_cmd, after=['servername','serveralias','customlog'])
+    
+    root.write_file(path)
 ~~~

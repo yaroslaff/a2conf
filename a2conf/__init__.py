@@ -93,25 +93,35 @@ class Node(object):
         self.content.append(child)
         self.last_child = child
 
-    def insert(self, child, after=None):
-        
+    def insert(self, child, after=None):        
         def get_index(content, after):
             #
             # return index of 
             #
             idx = None
             for i, c in enumerate(content):
-                if c.name.lower() == after.lower():
+                if isinstance(after, Node) and id(c) == id(after):
+                    idx = i+1
+                elif isinstance(after, str) and c.name.lower() == after.lower():
                     idx = i+1
             return idx
 
+        # sanity checks
+        # 1: after must be list of str or nodes
+        if isinstance(after, str) or isinstance(after, Node):
+            after = [after]
+
+        # 2: child is list of nodes/str
+        if isinstance(child, str) or isinstance(child, Node):
+            child = [child]
+        
+        child = [ Node(raw=x) if isinstance(x, str) else x for x in child]
+
         if not self.content:
-            self.add(child)
+            self.content = child
             return
-
-        if isinstance(child, str):
-            child = Node(raw=child)
-
+        
+        # get default index
         if self.content[-1].is_close():
             idx = len(self.content)-1
         else:
@@ -121,7 +131,8 @@ class Node(object):
             for after_item in reversed(after):
                 idx = get_index(self.content, after_item)
                 if idx:
-                    self.content.insert(idx, child)
+                    # self.content.insert(idx, child)
+                    self.content[idx:idx] = child
                     return
         
         # add to end
@@ -129,8 +140,8 @@ class Node(object):
 
         if not self.content[idx].is_close():
             idx+=1
-        self.content.insert(idx, child)
- 
+        # self.content.insert(idx, child)
+        self.content[idx:idx] = child 
  
     def add_raw(self, raw):
         sl = Node(raw, parent=self)
@@ -191,6 +202,7 @@ class Node(object):
         # read file
         root = self
         parent = root
+        self.path = filename
 
         line = 0
 

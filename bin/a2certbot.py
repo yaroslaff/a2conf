@@ -11,6 +11,8 @@ import string
 import sys
 import subprocess
 
+from a2conf import Node
+
 log = None
 
 class FatalError(Exception):
@@ -181,9 +183,9 @@ def is_local_ip(hostname, local_ip_list, report):
         else:
             report.problem('{} ({}) not local {}'.format(hostname, ip, local_ip_list))
 
-def get_all_hostnames(hostname, apacheconf):
+def get_all_hostnames(hostname, apacheconf, root=None):
     names = list()
-    vhost = next(yield_vhost(hostname, apacheconf))
+    vhost = next(yield_vhost(hostname, apacheconf, root=root))
     servername = next(vhost.children('ServerName')).args
     names.append(servername)
     for alias in vhost.children('ServerAlias'):
@@ -191,14 +193,15 @@ def get_all_hostnames(hostname, apacheconf):
     return names
 
 
-def get_webroot(hostname, apacheconf):
-    vhost = next(yield_vhost(hostname, apacheconf))
+def get_webroot(hostname, apacheconf, root=None):
+    vhost = next(yield_vhost(hostname, apacheconf, root=root))
     return next(vhost.children('DocumentRoot')).args
 
 
-def yield_vhost(domain, apacheconf):
-    root = a2conf.Node()
-    root.read_file(apacheconf)
+def yield_vhost(domain, apacheconf, root=None):
+    if root is None:
+        root = a2conf.Node()
+        root.read_file(apacheconf)
 
     for vhost in root.children('<VirtualHost>'):
         if '80' not in vhost.args:
@@ -340,11 +343,10 @@ def get_aliases(names, apacheconf):
 
     return set(aliases)
 
-
 def main():
     global log
 
-    def_file = '/etc/apache2/apache2.conf'
+    def_apacheconf = '/etc/apache2/apache2.conf'
     def_lepath = '/etc/letsencrypt/renewal/'
 
     epilog = 'Examples:\n' \
@@ -384,8 +386,8 @@ def main():
     g = parser.add_argument_group('General options')
     g.add_argument('--altroot', default=None, metavar='DocumentRoot',
                    help='Try also other root (in case if Alias used). def: {}'.format(None))
-    g.add_argument('-a', '--apacheconf', dest='apacheconf', nargs='?', default=def_file, metavar='PATH',
-                   help='Config file path (def: {})'.format(def_file))
+    g.add_argument('-c', '--conf', dest='apacheconf', nargs='?', default=def_apacheconf, metavar='PATH',
+                   help='Config file path (def: {})'.format(def_apacheconf))
     g.add_argument('-v', '--verbose', action='store_true',
                    default=False, help='verbose mode')
     g.add_argument('-q', '--quiet', action='store_true',
@@ -395,10 +397,10 @@ def main():
 
     g = parser.add_argument_group('Generate new certificate (certbot certonly --webroot)')
     g.add_argument('--create', default=False, action='store_true',
-                   help='Create LetsEncrypt certificate (via certbot). use -d and --aliases')
+                   help='Create LetsEncrypt certificate (via certbot). Use also -d and --aliases')
     g.add_argument('--aliases', action='store_true',
                    default=False, help='Include all ServerName and ServerAlias found in VirtualHost')
-
+    g.add_argument('--root', default=None, metavar='DocumentRoot', dest='docroot', help='DocumentRoot for HTTP site (if --create both)')
 
     args = parser.parse_args()
 
@@ -431,11 +433,19 @@ def main():
         lc = LetsEncryptCertificateConfig(path=None, webroot=webroot, domains=aliases)
         process_file(leconf_path=None, local_ip_list=local_ip_list, args=args, leconf=lc)
 
+
     elif args.create:
+
         if not args.domain:
             print("--domain requires at least one -d and optional --aliases")
             sys.exit(1)
+
+        # Fix apacheconf. If not specified
+        if args.apacheconf == def_apacheconf:
+            sys.exit(1)
+
         name = args.domain[0]
+
         print("Create cert for {}".format(name))
         aliases = get_aliases(args.domain, args.apacheconf) if args.aliases else list()
         webroot = get_webroot(name, args.apacheconf)
@@ -449,6 +459,7 @@ def main():
             cmd.extend(['-d', alias])
         print("RUNNING: {}".format(' '.join(cmd)))
         subprocess.run(cmd)
+
 
     elif os.path.isdir(args.lepath):
         for f in os.listdir(args.lepath):
