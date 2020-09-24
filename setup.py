@@ -9,9 +9,9 @@ def read(fname):
 
 setup(
     name='a2conf',
-    version='0.2.18',
+    version='0.2.19',
     packages=['a2conf'],
-    scripts=['bin/a2conf', 'bin/a2okerr.py', 'bin/a2certbot.py'],
+    # scripts=['bin/a2conf', 'bin/a2okerr.py', 'bin/a2certbot.py'],
 
     # install_requires=[],
 
