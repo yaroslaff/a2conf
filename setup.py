@@ -9,13 +9,13 @@ def read(fname):
 
 setup(
     name='a2conf',
-    version='0.2.19',
+    version='0.2.20',
     packages=['a2conf'],
     # scripts=['bin/a2conf', 'bin/a2okerr.py', 'bin/a2certbot.py'],
 
     # install_requires=[],
 
-    url='https://gitlab.com/yaroslaff/a2conf',
+    url='https://github.com/yaroslaff/a2conf',
     license='MIT',
     author='Yaroslav Polyakov',
     long_description=read('README.md'),
