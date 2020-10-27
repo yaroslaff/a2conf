@@ -1,4 +1,4 @@
-a2conf is utility and python module to work with apache2 config files.
+a2conf is python module to work with apache2 config files.
 
 For all examples we will use file [example.conf](https://gitlab.com/yaroslaff/a2conf/raw/master/examples/example.conf)
 which is available `examples/example.conf`. Use `export PYTHONPATH=.` to use module if it's not installed.
