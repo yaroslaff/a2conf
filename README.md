@@ -3,63 +3,6 @@ a2conf is utility and python module to work with apache2 config files.
 For all examples we will use file [example.conf](https://gitlab.com/yaroslaff/a2conf/raw/master/examples/example.conf)
 which is available `examples/example.conf`. Use `export PYTHONPATH=.` to use module if it's not installed.
 
-# a2conf.py utility
-## Examples
-Just smart grep
-~~~shell
-$ bin/a2conf examples/example.conf --cmd ServerName ServerAlias
-ServerName example.com
-ServerAlias www.example.com example.com 1.example.com 2.example.com
-ServerName example.com
-ServerAlias www.example.com 1.example.com 2.example.com secure.example.com
-
-$ bin/a2conf examples/example.conf --cmd SSLCertificateFile
-SSLCertificateFile /etc/letsencrypt/live/example.com/fullchain.pem
-~~~
-
-Only arguments:
-~~~shell
-# All arguments (including duplicates)
-$ bin/a2conf examples/example.conf --cmd ServerName ServerAlias --args
-example.com www.example.com example.com 1.example.com 2.example.com example.com www.example.com 1.example.com 2.example.com secure.example.com
-
-# Only unique arguments
-$ bin/a2conf examples/example.conf --cmd ServerName ServerAlias --uargs
-secure.example.com 1.example.com www.example.com example.com 2.example.com
-~~~
-
-Filtering:
-~~~shell
-# Only SSL hosts. Note: secure.example.com listed
-$ bin/a2conf examples/example.conf --cmd ServerName ServerAlias --uargs --filter sslengine on
-1.example.com example.com secure.example.com 2.example.com www.example.com
-
-# Inverted filtering, hosts without SSLEngine on. Note: secure.example.com not listed
-$ bin/a2conf examples/example.conf --cmd ServerName ServerAlias --uargs --filter sslengine on --neg
-example.com 2.example.com 1.example.com www.example.com
-~~~
-
-Per-vhost info:
-~~~shell
-# show documentroot for virtualhosts
-$ bin/a2conf examples/example.conf  --cmd servername serveralias --uargs --vhost '{vhostargs} {servername} {documentroot}'
-*:80 example.com /var/www/example
-*:443 example.com /var/www/example
-
-# ... only for virtualhosts with SSLEngine On
-$ bin/a2conf examples/example.conf  --cmd servername serveralias --uargs --vhost '{vhostargs} {servername} {documentroot}' --filter sslengine on
-*:443 example.com /var/www/example
-
-# What certfile we use for secure.example.com ?
-$ bin/a2conf examples/example.conf --vhost '{servername} {sslcertificatefile}' --filter ServerName,ServerAlias secure.example.com
-example.com /etc/letsencrypt/live/example.com/fullchain.pem
-
-# What certfile we use for 1.example.com (more good-style error-prone approach) ?
-$ bin/a2conf examples/example.conf --vhost '{servername} {sslcertificatefile}' --filter ServerName,ServerAlias 1.example.com  --undef _skip
-example.com /etc/letsencrypt/live/example.com/fullchain.pem
-~~~
-You can get list of all available tokens for `--vhost` option in verbose mode (`-v` option).
-
 # Node class
 
 ## Properties and methods
