@@ -2,3 +2,4 @@
 *.pyc
 dist/
 a2conf.egg-info/
+build

@@ -171,7 +171,11 @@ class Node(object):
 
                 if self.includes and node.name.lower() in ['include', 'includeoptional']:
                     basedir = os.path.dirname(filename)
-                    include_files = glob.glob(os.path.join(basedir, node.args))
+                    fullpath = os.path.join(basedir, node.args)
+                    if os.path.isdir(fullpath):
+                        fullpath = os.path.join(fullpath, '*')
+                        
+                    include_files = glob.glob(os.path.join(fullpath))
                     for path in include_files:
                         sub_node = Node(path)
                         self.extend(sub_node)
