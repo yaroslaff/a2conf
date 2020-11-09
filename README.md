@@ -40,6 +40,27 @@ generator will return nested nodes too (e.g. what is inside `<IfModule>` or `<Di
 
 `write_file(filename)` - opens file for writing and dump() to this file.
 
+
+`add(child)` - add new child node to content of Node after all other nodes (including possible closing 
+Node `</VirtualHost>`). Child could be node or raw config line.
+
+`insert(child, after)` - smarter then `add()`. Add new child node, place it after last node with name `after`. e.g.:
+~~~
+doc_root = Node(raw='DocumentRoot /var/www/site1')
+vhost.insert([doc_root], after=['ServerName','ServerAlias'])
+~~~
+
+`child` is list of `Node`s to insert. But a2conf is friendly: if you pass single element, it will be converted to list with this element, and then if any element is string, it will be converted to node. So, this command woks well too:
+~~~
+vhost.insert('DocumentRoot /var/www/site1', after=['ServerName','ServerAlias'])
+~~~
+
+If `after` not specified, or not found, child is inserted before closing tag. If specified, method tries to insert new node
+after last found node in `after`. 
+
+In this example, new node will be inserted after `ServerAlias` (if it exists). If not, it will be inserted after `ServerName` (if it exists). And if all commands listed in `after` is not found, node will be inserted as last node, right before closing tag (e.g., right before `</VirtualHost>`).
+
+
 ## Examples
 
 ### Just dump apache config

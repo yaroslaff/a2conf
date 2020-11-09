@@ -94,6 +94,58 @@ class Node(object):
         sl = Node(raw, parent=self)
         self.add(sl)
 
+    def insert(self, child, after=None):        
+        def get_index(content, after):
+            #
+            # return index of 
+            #
+            idx = None
+            for i, c in enumerate(content):
+                if isinstance(after, Node) and id(c) == id(after):
+                    idx = i+1
+                elif isinstance(after, str) and c.name.lower() == after.lower():
+                    idx = i+1
+            return idx
+
+        # sanity checks
+        # 1: after must be list of str or nodes
+        if isinstance(after, str) or isinstance(after, Node):
+            after = [after]
+
+        # 2: child is list of nodes/str
+        if isinstance(child, str) or isinstance(child, Node):
+            child = [child]
+        
+        child = [ Node(raw=x) if isinstance(x, str) else x for x in child]
+
+        if not self.content:
+            self.content = child
+            return
+        
+        # get default index
+        if self.content[-1].is_close():
+            idx = len(self.content)-1
+        else:
+            idx = len(self.content)
+
+        if after:
+            for after_item in reversed(after):
+                idx = get_index(self.content, after_item)
+                if idx:
+                    # self.content.insert(idx, child)
+                    self.content[idx:idx] = child
+                    return
+        
+        # add to end
+        idx = len(self.content)-1
+
+        if not self.content[idx].is_close():
+            idx+=1
+        # self.content.insert(idx, child)
+        self.content[idx:idx] = child 
+
+
+
     def get_opentag(self):
         return "<{} {}>".format(self.section, self.args)
         #return self.raw.strip()
