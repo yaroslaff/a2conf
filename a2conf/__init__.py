@@ -201,6 +201,7 @@ class Node(object):
         # read file
         root = self
         parent = root
+        self.path = filename
 
         line = 0
 

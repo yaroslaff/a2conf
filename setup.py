@@ -9,7 +9,7 @@ def read(fname):
 
 setup(
     name='a2conf',
-    version='0.2.24',
+    version='0.2.25',
     packages=['a2conf'],
     scripts=[ 'bin/a2conf', 'bin/apache2okerr.py', 'bin/apache2-certbot-diag.py' ],
 
