@@ -230,8 +230,11 @@ class Node(object):
                         
                     include_files = glob.glob(os.path.join(fullpath))
                     for path in include_files:
-                        sub_node = Node(path)
-                        self.extend(sub_node)
+                        try:
+                            sub_node = Node(path)
+                            self.extend(sub_node)
+                        except FileNotFoundError as e:
+                            print("WARN failed to import {} ({})".format(path, l))
                         #self.content.extend(sub_node.content)
 
 
