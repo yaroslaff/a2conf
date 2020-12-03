@@ -55,6 +55,10 @@ def teardown_module(module):
 
 
 class TestClass:
+
+    def test_dev(self):
+        print("test_dev")
+
     def test_children(self):
         print(123)
         assert(1==1)
