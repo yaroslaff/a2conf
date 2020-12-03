@@ -58,6 +58,8 @@ class TestClass:
 
     def test_dev(self):
         print("test_dev")
+        root = a2conf.Node(files['c1'])
+        root.dump()
 
     def test_children(self):
         print(123)

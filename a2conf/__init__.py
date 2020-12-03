@@ -217,7 +217,8 @@ class Node(object):
                     parent.add(node)
                     parent = node
                 elif node.is_close():
-                    parent.add(node)
+                    # do not add closing tags
+                    # parent.add(node)
                     parent = parent.parent
                 else:
                     parent.add(node)
@@ -283,6 +284,7 @@ class Node(object):
             if self.children:
                 for d in self.content:
                     d.dump(fh, depth+1)
+                fh.write("{}</{}>\n".format(self.prefix*line_depth, self.section))
         else:
             # neither cmd, nor section
             if self.suffix:
