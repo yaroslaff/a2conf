@@ -29,6 +29,7 @@ for vhost in root.children('<VirtualHost>'):
             print("{} has SSL enabled".format(servername))
     except StopIteration:
         # No SSL Engine directive in this vhost
+        pass
 ~~~
 
 ## Node class
