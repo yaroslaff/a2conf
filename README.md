@@ -1,8 +1,7 @@
-# a2conf provides easy way to configure apache2 from python
-a2conf is python module to work with apache2 config files.
+# a2conf 
+a2conf is python3 module which provides easy way to configure apache2. a2conf used by [a2utils](https://github.com/yaroslaff/a2utils) package, so you may use a2utils as examples.
 
-For all examples we will use file [example.conf](https://gitlab.com/yaroslaff/a2conf/raw/master/examples/example.conf)
-which is available `examples/example.conf`. Use `export PYTHONPATH=.` to use module if it's not installed.
+For all examples we will use test config file `examples/example.conf` in source code. Use `export PYTHONPATH=.` to use module if it's not installed.
 
 **Create simple apache config**
 see examples/ex5_create.py for full code:
