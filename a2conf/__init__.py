@@ -63,7 +63,7 @@ class Node(object):
             self.read_file(read)
 
     def __repr__(self):
-        return("<{}>".format(self.name))
+        return("Node:{!r}".format(self.name))
 
     def is_open(self):
         """ Return True if this node opens section, e.g <VirtualHost> or <IfModule>"""
@@ -85,6 +85,8 @@ class Node(object):
 
     def add(self, child):
         """ Append child to node """
+        assert(isinstance(child, Node))
+
         if self.content is None:
             self.content = list()
         self.content.append(child)
@@ -120,13 +122,13 @@ class Node(object):
 
         if not self.content:
             self.content = child
-            return
+            return child[0]
         
-        # get default index
-        if self.content[-1].is_close():
-            idx = len(self.content)-1
-        else:
-            idx = len(self.content)
+        ## get default index
+        #if self.content[-1].is_close():
+        #    idx = len(self.content)-1
+        #else:
+        #    idx = len(self.content)
 
         if after:
             for after_item in reversed(after):
@@ -134,15 +136,9 @@ class Node(object):
                 if idx:
                     # self.content.insert(idx, child)
                     self.content[idx:idx] = child
-                    return
-        
-        # add to end
-        idx = len(self.content)-1
-
-        if not self.content[idx].is_close():
-            idx+=1
-        # self.content.insert(idx, child)
-        self.content[idx:idx] = child 
+                    return child[0]        
+        self.content.extend(child)
+        return child[0]
 
 
 
@@ -265,7 +261,6 @@ class Node(object):
 
 
     def dump(self, fh=sys.stdout, depth=0):
-        # Print line itself
 
         if self.cmd:
             fh.write("{}{} {} {}\n".format(self.prefix*depth, self.cmd, self.args, self.suffix))
@@ -286,9 +281,13 @@ class Node(object):
                     d.dump(fh, depth+1)
                 fh.write("{}</{}>\n".format(self.prefix*line_depth, self.section))
         else:
-            # neither cmd, nor section
-            if self.suffix:
-                print(self.prefix*depth + self.suffix)
+            # neither cmd, nor section            
+            if self.suffix is not None:
+                fh.write(self.prefix*depth + self.suffix + '\n')
+            else:
+                if self.raw is not None:
+                    fh.write('\n')
+            
             # only root node has cmd=None, section=None but has children
             if self.children:
                 for d in self.content:

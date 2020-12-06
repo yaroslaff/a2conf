@@ -1,11 +1,40 @@
+# a2conf provides easy way to configure apache2 from python
 a2conf is python module to work with apache2 config files.
 
 For all examples we will use file [example.conf](https://gitlab.com/yaroslaff/a2conf/raw/master/examples/example.conf)
 which is available `examples/example.conf`. Use `export PYTHONPATH=.` to use module if it's not installed.
 
-# Node class
+**Create simple apache config**
+see examples/ex5_create.py for full code:
+~~~python
+vhost = root.insert('<VirtualHost *:80>')
+vhost.insert([
+        '# This VirtualHost is auto-generated',
+        'ServerName example.com', 
+        'ServerAlias www.example.com', 
+        '', 
+        'DocumentRoot /var/www/example.com/'
+        ])
+~~~
 
-## Properties and methods
+**Read apache config**
+list all SSL hosts (see examples/ex2_query.py for full code):
+~~~python
+root = a2conf.Node(config)
+for vhost in root.children('<VirtualHost>'):
+    servername = vhost.first('servername').args # First query method, via first(). Not much fail-safe but short.
+
+    try:
+        ssl_option = next(vhost.children('sslengine')).args # Second query method, via children()
+        if ssl_option.lower() == 'on':
+            print("{} has SSL enabled".format(servername))
+    except StopIteration:
+        # No SSL Engine directive in this vhost
+~~~
+
+## Node class
+
+### Properties
 
 `raw` - text line as-is, with all spaces, tabs and with comments
 
@@ -42,7 +71,7 @@ generator will return nested nodes too (e.g. what is inside `<IfModule>` or `<Di
 
 
 `add(child)` - add new child node to content of Node after all other nodes (including possible closing 
-Node `</VirtualHost>`). Child could be node or raw config line.
+Node `</VirtualHost>`). Child is Node type, use `add_raw(line)` to add raw string.
 
 `insert(child, after)` - smarter then `add()`. Add new child node, place it after last node with name `after`. e.g.:
 ~~~
@@ -55,10 +84,17 @@ vhost.insert([doc_root], after=['ServerName','ServerAlias'])
 vhost.insert('DocumentRoot /var/www/site1', after=['ServerName','ServerAlias'])
 ~~~
 
-If `after` not specified, or not found, child is inserted before closing tag. If specified, method tries to insert new node
+If `after` not specified, or not found, child is appended to end. If specified, method tries to insert new node
 after last found node in `after`. 
 
 In this example, new node will be inserted after `ServerAlias` (if it exists). If not, it will be inserted after `ServerName` (if it exists). And if all commands listed in `after` is not found, node will be inserted as last node, right before closing tag (e.g., right before `</VirtualHost>`).
+
+Returns first inserted child. So you may write code like this:
+~~~
+# Create virtualhost for example.net
+vhost = root.insert("<VirtualHost *:80>")
+vhost.insert('ServerName example.net')
+~~~
 
 
 ## Examples

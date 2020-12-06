@@ -1,7 +1,14 @@
 #!/usr/bin/env python3
 import sys
+import os
 import a2conf
-root = a2conf.Node(sys.argv[1])
+
+try:
+    config = sys.argv[1]
+except IndexError:
+    config = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'example.conf')
+
+root = a2conf.Node(config)
 
 for vhost in root.children('<VirtualHost>'):
     if vhost.first('sslengine'):

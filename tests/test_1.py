@@ -1,4 +1,4 @@
-import a2conf
+from a2conf import Node
 import pytest
 from tempfile import mkdtemp
 import os
@@ -33,8 +33,6 @@ examples = {
 'include_glob': 'Include {confdir}/c*.conf'
 }
 
-
-
 def setup_module(module):
     global confdir
     global files
@@ -56,15 +54,24 @@ def teardown_module(module):
 
 class TestClass:
 
-    def test_dev(self):
-        print("test_dev")
-        root = a2conf.Node(files['c1'])
-        root.dump()
+    def test_add(self):
+        root = Node()
+        cmd = Node(raw = 'ServerName example.com')
+        root.add(cmd)
+        root.insert('DocumentRoot /var/www/html')
+
+        root.insert('ServerAlias www.example.com', 'DocumenRoot')
+        
+        vhost = root.insert("<VirtualHost *:80>")
+        vhost.insert('ServerName example.net')
+        vhost.insert('DocumentRoot /var/www/examplenet/')
+        vhost.insert('ServerAlias www.example.net', 'servername')
+
 
     def test_children(self):
         print(123)
         assert(1==1)
-        root = a2conf.Node(files['c1'])
+        root = Node(files['c1'])
         assert(len(list(root.children('<VirtualHost>'))) == 1)
 
         vh = list(root.children('<VirtualHost>'))[0]
@@ -89,18 +96,18 @@ class TestClass:
 
     def test_include(self):
         # with disabled recursion len = 1
-        root = a2conf.Node(files['include'], includes=False)
+        root = Node(files['include'], includes=False)
         assert(len(list(root.children(recursive=True))) == 1)
 
-        root = a2conf.Node(files['include'])
+        root = Node(files['include'])
         assert(len(list(root.children(recursive=True)))> 1)
 
     def test_include_glob(self):
-        root = a2conf.Node(files['include_glob'])
+        root = Node(files['include_glob'])
         assert(len(list(root.children(recursive=True))) > 1)
 
     def test_replace(self):
-        root = a2conf.Node(files['c1'])
+        root = Node(files['c1'])
 
         ssl = next(root.children('SSLEngine', recursive=True))
         ssl.args = 'off'
@@ -109,7 +116,7 @@ class TestClass:
         assert(ssl.args == 'off')
 
     def test_first(self):
-        root = a2conf.Node(files['c1'])
+        root = Node(files['c1'])
 
         name1 = next(root.children('servername', recursive=True))
         name2 = next(root.children('servername', recursive=True))
@@ -119,7 +126,7 @@ class TestClass:
         assert(name2 == name3)
 
     def test_delete(self):
-        root = a2conf.Node(files['c1'])
+        root = Node(files['c1'])
 
         ssl = root.first('SSLEngine', recursive=True)
         ssl.delete()
