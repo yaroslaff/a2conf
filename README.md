@@ -96,7 +96,20 @@ vhost = root.insert("<VirtualHost *:80>")
 vhost.insert('ServerName example.net')
 ~~~
 
-`delete()` - removes this Node from parent (e.g. remove vhost from apache config or remove directive from vhost)
+`delete()` - removes this Node from parent (e.g. remove vhost from apache config or remove directive from vhost). 
+You should not call `delete()` while iterating over `children()` (unless you want to delete just one node). Proper usage:
+~~~python
+    # Bad way, it will delete only one node:
+    for n in vhost.children('Redirect'):
+        n.delete() 
+
+    # Proper way
+    deleted=list()
+    for n in vhost.children('Redirect'):
+        deleted.append(n)
+    for n in deleted:
+        n.delete()
+~~~
 
 ## Examples
 
