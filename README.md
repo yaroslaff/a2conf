@@ -96,6 +96,7 @@ vhost = root.insert("<VirtualHost *:80>")
 vhost.insert('ServerName example.net')
 ~~~
 
+`delete()` - removes this Node from parent (e.g. remove vhost from apache config or remove directive from vhost)
 
 ## Examples
 
