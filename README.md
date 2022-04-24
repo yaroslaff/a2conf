@@ -4,6 +4,7 @@ a2conf is python3 module which provides easy way to configure apache2. a2conf us
 For all examples we will use test config file `examples/example.conf` in source code. Use `export PYTHONPATH=.` to use module if it's not installed.
 
 **Create simple apache config**
+
 see examples/ex5_create.py for full code:
 ~~~python
 vhost = root.insert('<VirtualHost *:80>')
@@ -17,6 +18,7 @@ vhost.insert([
 ~~~
 
 **Read apache config**
+
 list all SSL hosts (see examples/ex2_query.py for full code):
 ~~~python
 root = a2conf.Node(config)
