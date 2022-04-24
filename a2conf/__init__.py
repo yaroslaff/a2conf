@@ -5,6 +5,15 @@ import sys
 import os
 import glob
 
+class MyException(Exception):
+    pass
+
+class VhostNotFound(MyException):
+    pass
+
+class ArgumentError(MyException):
+    pass
+
 class Node(object):
     def __init__(self, read=None, raw=None, parent=None, name=None, suffix=None, path=None, line=None, includes=True):
         self.raw = raw
@@ -303,4 +312,26 @@ class Node(object):
     def delete(self):
         """ Delete myself from parent content """
         self.parent.content.remove(self)
+
+    def find_vhost(self, hostname, arg=None):
+
+        def get_all_hostnames(vhost):
+            names = list()
+            try:
+                servername = next(vhost.children('ServerName')).args
+                names.append(servername)
+            except StopIteration:
+                pass
+
+            for alias in vhost.children('ServerAlias'):
+                names.extend(alias.args.split(' '))
+            return names
+        
+        for vhost in self.children('<VirtualHost>'):
+            if arg and not arg in vhost.args:
+                continue
+            if hostname in get_all_hostnames(vhost):
+                return vhost
+        raise VhostNotFound('Vhost args: {} host: {} not found'.format(arg, hostname))
+
 

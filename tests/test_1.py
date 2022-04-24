@@ -3,6 +3,8 @@ import pytest
 from tempfile import mkdtemp
 import os
 
+import a2conf
+
 confdir = None
 files = dict()
 
@@ -132,4 +134,31 @@ class TestClass:
         ssl.delete()
 
         assert(root.first('SSLEngine', recursive=True) is None)
+
+    def test_find_vhost(self):
+        root = Node(files['c1'])
+        root.find_vhost('example.com', '*:80')
+        root.find_vhost('www.example.com', '*:443')
+        root.find_vhost('example.example.com')
+        root.find_vhost('x.example.com')
+
+    def test_missing_vhost(self):
+        root = Node(files['c1'])
+        try:
+            root.find_vhost('missing.example.com')
+        except a2conf.VhostNotFound:
+            # not found, as it should be
+            pass
+        else:
+            # found missing vhost
+            assert False, "Error: No exception when looking for missing vhost"
+
+        try:
+            root.find_vhost('example.com', '*:8888')
+        except a2conf.VhostNotFound:
+            # not found, as it should be
+            pass
+        else:
+            # found missing vhost
+            assert False, "Error: No exception when looking for missing vhost"
 

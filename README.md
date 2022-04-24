@@ -32,6 +32,14 @@ for vhost in root.children('<VirtualHost>'):
         pass
 ~~~
 
+**Get VirtualHost**
+~~~python
+        root = a2conf.Node(config)
+        vh1 = root.find_vhost('example.com', '*:80')
+        vh2 = root.find_vhost('www.example.com', '*:443')
+        vh3 = root.find_vhost('example.example.com')
+~~~
+
 ## Node class
 
 ### Properties
