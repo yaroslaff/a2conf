@@ -31,7 +31,7 @@ class Node(object):
         self.line = line # line in file
 
         if self.raw:
-            match = re.search('(#.*)$',self.raw)
+            match = re.search('(\s*#.*)$',self.raw)
             if match:
                 self.suffix = match.group(0)
             else:
@@ -272,7 +272,7 @@ class Node(object):
     def dump(self, fh=sys.stdout, depth=0):
 
         if self.cmd:
-            fh.write("{}{} {} {}\n".format(self.prefix*depth, self.cmd, self.args, self.suffix))
+            fh.write("{}{} {}{}\n".format(self.prefix*depth, self.cmd, self.args, self.suffix))
         elif self.section:
             # last section element should have depth-1
             if self.section.startswith('/'):
@@ -281,9 +281,9 @@ class Node(object):
                 line_depth = depth
 
             if self.args:
-                fh.write("{}<{} {}> {}\n".format(self.prefix*line_depth, self.section, self.args, self.suffix))
+                fh.write("{}<{} {}>{}\n".format(self.prefix*line_depth, self.section, self.args, self.suffix))
             else:
-                fh.write("{}<{}> {}\n".format(self.prefix*line_depth, self.section, self.suffix))
+                fh.write("{}<{}>{}\n".format(self.prefix*line_depth, self.section, self.suffix))
 
             if self.children:
                 for d in self.content:
