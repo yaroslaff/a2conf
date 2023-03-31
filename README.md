@@ -44,13 +44,13 @@ for vhost in root.children('<VirtualHost>'):
 
 **Save virtualHost**
 
-If you will call `write_file()` method of vhost, it will write only this vhost. To save file with all vhosts, use parent method.
+If you will call `write_file()` method of vhost, it will write only this vhost. To save file with all vhosts, use save_file().
 
 ~~~python
         root = a2conf.Node(config)
         vh = root.find_vhost('example.com')
-        parent = vh.parent
-        parent.write_file(parent.path)
+        vh.insert(['CustomLog /var/log/apache2/example.com-access.log'])
+        vh.save_file()
 ~~~
 
 ## Node class
