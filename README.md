@@ -43,6 +43,7 @@ for vhost in root.children('<VirtualHost>'):
 ~~~
 
 **Save virtualHost**
+
 If you will call `write_file()` method of vhost, it will write only this vhost. To save file with all vhosts, use parent method.
 
 ~~~python
