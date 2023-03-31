@@ -31,6 +31,16 @@ examples = {
     </IfModule mod_ssl.c>
 </VirtualHost>
 """,
+'c2': """
+<VirtualHost *:80  *:443>
+    ServerName example.com
+</VirtualHost>
+<VirtualHost *:80  *:443>
+    ServerName www.example.com
+</VirtualHost>
+
+""",
+
 'include': 'Include {confdir}/c1.conf',
 'include_glob': 'Include {confdir}/c*.conf'
 }
@@ -49,9 +59,9 @@ def setup_module(module):
 
 def teardown_module(module):
     for codename, path in files.items():
-        os.unlink(path)
+        os.unlink(path)        
 
-    os.rmdir(confdir)
+    os.rmdir(confdir)    
 
 
 class TestClass:
@@ -161,4 +171,20 @@ class TestClass:
         else:
             # found missing vhost
             assert False, "Error: No exception when looking for missing vhost"
+
+    def test_save_file(self):
+        root = Node(files['c2'])
+        vh = root.find_vhost('example.com')
+        vh.insert(['CustomLog /var/log/apache2/example.com-access.log'])
+        vh.save_file()
+
+        root2 = Node(files['c2'])
+        vh = root2.find_vhost('example.com')
+        vh2 = root2.find_vhost('www.example.com')
+
+
+        assert vh.first('CustomLog'), "Error: missing added statement"
+        assert vh2, "Error: missing 2nd vhost after write"
+    
+
 

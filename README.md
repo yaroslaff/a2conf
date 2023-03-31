@@ -42,6 +42,16 @@ for vhost in root.children('<VirtualHost>'):
         vh3 = root.find_vhost('example.example.com')
 ~~~
 
+**Save virtualHost**
+If you will call `write_file()` method of vhost, it will write only this vhost. To save file with all vhosts, use parent method.
+
+~~~python
+        root = a2conf.Node(config)
+        vh = root.find_vhost('example.com')
+        parent = vh.parent
+        parent.write_file(parent.path)
+~~~
+
 ## Node class
 
 ### Properties
@@ -79,6 +89,7 @@ generator will return nested nodes too (e.g. what is inside `<IfModule>` or `<Di
 
 `write_file(filename)` - opens file for writing and dump() to this file.
 
+`save_file()` - saves whole file with this vhost (with changes and with other vhosts)
 
 `add(child)` - add new child node to content of Node after all other nodes (including possible closing 
 Node `</VirtualHost>`). Child is Node type, use `add_raw(line)` to add raw string.

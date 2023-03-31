@@ -31,7 +31,7 @@ class Node(object):
         self.line = line # line in file
 
         if self.raw:
-            match = re.search('(\s*#.*)$',self.raw)
+            match = re.search(r'(\s*#.*)$',self.raw)
             if match:
                 self.suffix = match.group(0)
             else:
@@ -244,13 +244,16 @@ class Node(object):
                         #self.content.extend(sub_node.content)
 
 
+    def save_file(self):
+        parent = self.parent
+        parent.write_file(parent.path)
+
     def write_file(self, filename):
         if filename != '-':        
             with open(filename, 'w') as fh:
                 self.dump(fh)
         else:
             self.dump()
-
 
     def vdump(self, depth=0):
         newdepth = depth + 1
