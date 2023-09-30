@@ -316,7 +316,7 @@ class Node(object):
         """ Delete myself from parent content """
         self.parent.content.remove(self)
 
-    def find_vhost(self, hostname, arg=None):
+    def yield_vhost(self, hostname, arg=None):
 
         def get_all_hostnames(vhost):
             names = list()
@@ -334,7 +334,9 @@ class Node(object):
             if arg and not arg in vhost.args:
                 continue
             if hostname in get_all_hostnames(vhost):
-                return vhost
-        raise VhostNotFound('Vhost args: {} host: {} not found'.format(arg, hostname))
+                yield vhost
+        # raise VhostNotFound('Vhost args: {} host: {} not found'.format(arg, hostname))
 
+    def find_vhost(self, hostname, arg=None):
+        return next(self.yield_vhost(hostname=hostname, arg=arg))
 

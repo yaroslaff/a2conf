@@ -40,6 +40,9 @@ for vhost in root.children('<VirtualHost>'):
         vh1 = root.find_vhost('example.com', '*:80')
         vh2 = root.find_vhost('www.example.com', '*:443')
         vh3 = root.find_vhost('example.example.com')
+
+        for vhost in root.yield_vhost('example.com'):
+            do_something(vhost)
 ~~~
 
 **Save virtualHost**
