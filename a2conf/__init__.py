@@ -31,7 +31,7 @@ class Node(object):
         self.line = line # line in file
 
         if self.raw:
-            match = re.search(r'(\s*#.*)$',self.raw)
+            match = re.search(r'^(\s*#.*)$',self.raw)
             if match:
                 self.suffix = match.group(0)
             else:
